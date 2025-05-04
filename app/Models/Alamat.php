@@ -15,7 +15,7 @@ class Alamat extends Model
 
     protected $fillable = [
         'id_pembeli',
-        'isPriority',
+        'isUtama',
         'nama_alamat',
     ];
 
