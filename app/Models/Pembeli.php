@@ -21,13 +21,13 @@ class Pembeli extends Authenticatable
     protected $fillable = [
         'nama',
         'email',
-        'PASSWORD',
+        'password',
         'telepon',
         'poin',
         'foto',
     ];
 
-    public function pembeliiDiskusi(): HasMany
+    public function pembeliDiskusi(): HasMany
     {
         return $this->hasMany(Diskusi::class, 'id_pembeli');
     }
