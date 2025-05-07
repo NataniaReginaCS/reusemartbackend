@@ -9,23 +9,78 @@ use App\Http\Controllers\PembeliController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\PegawaiController;
+use App\Http\Controllers\PenitipController;
 use App\Http\Controllers\OrganisasiController;
+use App\Http\Middleware\OwnerMiddleware;
+use App\Http\Middleware\PenitipMiddleware;
+use App\Http\Middleware\PembeliMiddleware;
+use App\Http\Middleware\OrganisasiMiddleware;
+use App\Http\Middleware\CSMiddleware;
+use App\Http\Middleware\GudangMiddleware;
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\KurirMiddleware;
+use App\Http\Middleware\HunterMiddleware;
+
+
 
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('/registerPembeli', [AuthController::class, 'registerPembeli']);
-Route::post('/registerOrganisasi', [AuthController::class, 'registerOrganisasi']);
-Route::post('/tambahAlamat', [PembeliController::class,'addAlamat']);
-Route::post('/findAlamat', [PembeliController::class,'findUtama']);
+
+
+
+
+
+
+
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->get('/cekRole', [AuthController::class, 'cekRole']);
+
+//Link Email 
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
-Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
-Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
-Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
 
+//Public
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/registerPembeli', [AuthController::class, 'registerPembeli']);
+Route::post('/registerOrganisasi', [AuthController::class, 'registerOrganisasi']);
+
+
+Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
+    Route::get('/fetchPembeli', [PembeliController::class, 'fetchPembeli']);
+    Route::get('/alamatUtama', [PembeliController::class, 'findUtama']);
+    Route::post('/tambahAlamat', [PembeliController::class,'addAlamat']);
+    Route::post('/findAlamat', [PembeliController::class,'findUtama']);
+});
+
+Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
+
+});
+
+Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function () {
+
+});
+
+Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
+
+});
+
+Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
+
+});
+
+Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
+    Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
+    Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);   
+    Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
+});
+
+
+Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
+
+});
 
 Route::prefix('request_donasi')->group(function () {
     Route::get('/', [Request_donasiController::class, 'index']);                   
