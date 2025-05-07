@@ -20,8 +20,9 @@ class Organisasi extends Authenticatable
     protected $fillable = [
         'nama',
         'alamat',
+        'telp',
         'email',
-        'PASSWORD',
+        'password',
         'foto',
     ];
 

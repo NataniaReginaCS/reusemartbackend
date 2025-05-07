@@ -8,6 +8,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PembeliController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\PegawaiController;
+use App\Http\Controllers\OrganisasiController;
 
 
 Route::get('/user', function (Request $request) {
@@ -15,10 +17,14 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/registerPembeli', [AuthController::class, 'registerPembeli']);
+Route::post('/registerOrganisasi', [AuthController::class, 'registerOrganisasi']);
 Route::post('/tambahAlamat', [PembeliController::class,'addAlamat']);
 Route::post('/findAlamat', [PembeliController::class,'findUtama']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
+Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
+Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
 
 
 Route::prefix('request_donasi')->group(function () {
