@@ -26,6 +26,10 @@ class Organisasi extends Authenticatable
         'foto',
     ];
 
+    public function getRoleAttribute() {
+        return 'Organisasi';
+    }
+
     public function organisasiReqDonasi(): HasMany
     {
         return $this->hasMany(Requset_donasi::class, 'id_organisasi');

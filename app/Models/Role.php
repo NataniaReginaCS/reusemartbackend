@@ -18,9 +18,9 @@ class Role extends Model
         'nama_role',
     ];
 
-    public function rolePegawai(): BelongsTo
+    public function pegawais(): HasMany
     {
-        return $this->BelongsTo(Organisasi::class, 'id_organisasi');
+        return $this->hasMany(Pegawai::class, 'id_role');
     }
 
 }

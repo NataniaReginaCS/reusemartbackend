@@ -14,6 +14,13 @@ use Illuminate\Support\Str;
 
 class PembeliController extends Controller
 {
+    
+    public function fetchPembeli()
+    {
+        $user = Auth::guard('pembeli')->user();
+        return response()->json($user, 200);
+    }
+
     public function addAlamat(Request $request){
         try{
 
@@ -56,25 +63,32 @@ class PembeliController extends Controller
 
     }
 
-    public function findUtama(Request $request){
-        try{
-            $request->validate([
-                'id_pembeli'=> 'required'
-            ]);
-            
-            $alamatUtama = Alamat::where('id_pembeli', $request->id_pembeli)->where('isUtama', true)->first();
-            
+    public function findUtama()
+    {
+        try {
+            $pembeli = auth('pembeli')->user();
+    
+            if (!$pembeli) {
+                return response()->json([
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
+    
+            $alamatUtama = Alamat::where('id_pembeli', $pembeli->id_pembeli)
+                                ->where('isUtama', true)
+                                ->first();
+    
             return response()->json([
                 'alamatUtama' => $alamatUtama,
-                'message' => 'Address  find sucessfully',
-            ], 201, [], JSON_UNESCAPED_SLASHES);
-
-        }catch(Exception $e){
+                'message' => 'Alamat utama berhasil ditemukan',
+            ], 200, [], JSON_UNESCAPED_SLASHES);
+    
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to find priority address',
+                'message' => 'Gagal menemukan alamat utama',
                 'error' => $e->getMessage(),
             ], 500);
         }
-        
     }
+    
 }

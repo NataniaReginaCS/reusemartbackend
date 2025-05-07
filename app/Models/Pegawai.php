@@ -21,11 +21,15 @@ class Pegawai extends Authenticatable
         'id_role',
         'nama',
         'email',
-        'PASSWORD',
+        'password',
         'tanggal_masuk',
         'tanggal_lahir',
         'wallet',
     ];
+
+    public function getRoleAttribute() {
+        return $this->pegawaiRole->nama_role;
+    }
 
     public function pegawaiDiskusi(): HasMany
     {

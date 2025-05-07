@@ -27,6 +27,10 @@ class Pembeli extends Authenticatable
         'foto',
     ];
 
+    public function getRoleAttribute() {
+        return 'Pembeli';
+    }
+
     public function pembeliDiskusi(): HasMany
     {
         return $this->hasMany(Diskusi::class, 'id_pembeli');

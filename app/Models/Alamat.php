@@ -15,8 +15,11 @@ class Alamat extends Model
 
     protected $fillable = [
         'id_pembeli',
-        'isUtama',
         'nama_alamat',
+        'nama_jalan',
+        'nama_kota',
+        'kode_pos',
+        'isUtama',
     ];
 
     public function alamatPembeli(): BelongsTo

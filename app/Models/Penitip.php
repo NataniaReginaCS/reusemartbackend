@@ -20,7 +20,7 @@ class Penitip extends Authenticatable
     protected $fillable = [
         'nama',
         'email',
-        'PASSWORD',
+        'password',
         'telepon',
         'wallet',
         'poin',
@@ -29,6 +29,10 @@ class Penitip extends Authenticatable
         'badges',
         'total_rating',
     ];
+
+    public function getRoleAttribute() {
+        return 'Penitip';
+    }
 
     public function penitipKomisi(): HasMany
     {

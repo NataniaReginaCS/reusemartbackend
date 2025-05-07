@@ -50,7 +50,6 @@ class ForgotPasswordController extends Controller
     
             $resetLink = "http://localhost:5173/reset-password?email={$request->email}&token=$token&user_type=$userType";
     
-            
             Mail::to($request->email)->send(new ResetPasswordLinkMail($resetLink));
     
             return response()->json(['message' => 'Link reset password telah dikirim.']);
