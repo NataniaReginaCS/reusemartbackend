@@ -21,6 +21,9 @@ class Alamat extends Model
         'kode_pos',
         'isUtama',
     ];
+    protected $casts = [
+        'isUtama' => 'boolean',
+    ];
 
     public function alamatPembeli(): BelongsTo
     {
