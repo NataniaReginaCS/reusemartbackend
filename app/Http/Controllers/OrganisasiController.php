@@ -34,33 +34,35 @@ class OrganisasiController extends Controller
     {
         try {
             $organisasi = Organisasi::findOrFail($id_organisasi);
-        
-            $request->validate([
-                'nama' => 'required|string|max:255',
-                'alamat' => 'required|string',
-                'telp' => 'required|string',
-                'email' => 'required|string|email|max:255|unique:organisasi,email,' . $id_organisasi.',id_organisasi',
-                'foto' => 'required|image:jpeg,png,jpg,gif,svg|max:2048',
-            ],
-            [
-                'email.required' => 'Email is required',
-                'email.email' => 'Email must be a valid email address',
-                'email.max' => 'Email must not exceed 255 characters',
-                'foto.max' => 'Picture must not exceed 2 mb',
-                'foto.image' => 'Picture must be an image',
-                'foto.mimes' => 'Picture must be a file of type: jpeg, png, jpg, gif, svg',
-                'nama.required' => 'Name is required',
-                'alamat.required' => 'Address is required',
-                'telp.required' => 'Phone number is required',
-            ]);
 
-            if($request->password == NULL){
+            $request->validate(
+                [
+                    'nama' => 'required|string|max:255',
+                    'alamat' => 'required|string',
+                    'telp' => 'required|string',
+                    'email' => 'required|string|email|max:255|unique:organisasi,email,' . $id_organisasi . ',id_organisasi',
+                    'foto' => 'required|image:jpeg,png,jpg,gif,svg|max:2048',
+                ],
+                [
+                    'email.required' => 'Email is required',
+                    'email.email' => 'Email must be a valid email address',
+                    'email.max' => 'Email must not exceed 255 characters',
+                    'foto.max' => 'Picture must not exceed 2 mb',
+                    'foto.image' => 'Picture must be an image',
+                    'foto.mimes' => 'Picture must be a file of type: jpeg, png, jpg, gif, svg',
+                    'nama.required' => 'Name is required',
+                    'alamat.required' => 'Address is required',
+                    'telp.required' => 'Phone number is required',
+                ]
+            );
+
+            if ($request->password == NULL) {
                 $request->password = $organisasi->password;
             }
 
             $cekEmail = Organisasi::where('email', $request->email)->where('id_organisasi', '!=', $id_organisasi)->exists() ||
-            DB::table('pembeli')->where('email', $request->email)->exists() ||
-            DB::table('penitip')->where('email', $request->email)->exists();
+                DB::table('pembeli')->where('email', $request->email)->exists() ||
+                DB::table('penitip')->where('email', $request->email)->exists();
 
             if ($cekEmail) {
                 return response()->json([
@@ -68,16 +70,16 @@ class OrganisasiController extends Controller
                 ], 400);
             }
 
-            if($request->hasFile('foto')) {
+            if ($request->hasFile('foto')) {
                 if ($organisasi->foto) {
                     Storage::disk('public')->delete($organisasi->foto);
                 }
                 $foto = $request->file('foto');
                 $fotoPath = $foto->store('images/organisasi', 'public');
-            
+
             }
 
-            $organisasi->update([ 
+            $organisasi->update([
                 'nama' => $request->nama,
                 'alamat' => $request->alamat,
                 'telp' => $request->telp,
@@ -90,12 +92,12 @@ class OrganisasiController extends Controller
                 'organisasi' => $organisasi,
                 'message' => 'Organisasi updated successfully',
             ], 200);
-        } catch(ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Failed to update organisasi',
                 'errors' => $e->errors(),
             ], 422);
-        }catch (Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to update organisasi',
                 'error' => $e->getMessage(),
