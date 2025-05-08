@@ -84,7 +84,7 @@ class BarangController extends Controller
             'message' => 'Barang created successfully',
             'data' => $barang
         ], 201);
-        
+
     }
 
     public function update(Request $request, $id)
@@ -109,16 +109,16 @@ class BarangController extends Controller
         $barang->update($validatedData);
 
         if ($barang->foto !== null) {
-                File::delete(public_path($barang->foto));
-            }
+            File::delete(public_path($barang->foto));
+        }
 
-            $destinationPath = public_path('barang');
-            $fotoFile = $request->file('foto');
-            $fotoName = 'foto-' . time() . '.' . $fotoFile->getClientOriginalExtension();
-            $fotoFile->move($destinationPath, $fotoName);
-    
-            $pembeli->update([
-                'foto' => 'barang/' . $fotoName,
+        $destinationPath = public_path('barang');
+        $fotoFile = $request->file('foto');
+        $fotoName = 'foto-' . time() . '.' . $fotoFile->getClientOriginalExtension();
+        $fotoFile->move($destinationPath, $fotoName);
+
+        $barang->update([
+            'foto' => 'barang/' . $fotoName,
         ]);
     }
 
