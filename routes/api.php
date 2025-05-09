@@ -62,7 +62,19 @@ Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function ()
 });
 
 Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function () {
+    Route::prefix('request_donasi')->group(function () {
+        Route::get('/', [Request_donasiController::class, 'index']);
+        Route::get('/show', [Request_donasiController::class, 'show']);
+        Route::post('/', [Request_donasiController::class, 'store']);
+        Route::put('/{id}', [Request_donasiController::class, 'update']);
+        Route::put('/{id}/alokasi', [Request_donasiController::class, 'alokasi']);
+        Route::delete('/{id}', [Request_donasiController::class, 'destroy']);
 
+        Route::get('/search', [Request_donasiController::class, 'search']);
+        Route::get('/filterByDate', [Request_donasiController::class, 'filterByDate']);
+        Route::get('/filterByStatus', [Request_donasiController::class, 'filterByStatus']);
+        Route::get('/organisasi/{id_organisasi}/history', [Request_donasiController::class, 'historyByOrganisasi']);
+    });
 });
 
 Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
@@ -76,7 +88,6 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
 });
-
 Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
 Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
 Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
@@ -86,23 +97,11 @@ Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
 Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
 
 
+
 Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
 
 });
 
-Route::prefix('request_donasi')->group(function () {
-    Route::get('/', [Request_donasiController::class, 'index']);
-    Route::get('/{id}', [Request_donasiController::class, 'show']);
-    Route::post('/', [Request_donasiController::class, 'store']);
-    Route::put('/{id}', [Request_donasiController::class, 'update']);
-    Route::put('/{id}/alokasi', [Request_donasiController::class, 'alokasi']);
-    Route::delete('/{id}', [Request_donasiController::class, 'destroy']);
-
-    Route::get('/search', [Request_donasiController::class, 'search']);
-    Route::get('/filterByDate', [Request_donasiController::class, 'filterByDate']);
-    Route::get('/filterByStatus', [Request_donasiController::class, 'filterByStatus']);
-    Route::get('/organisasi/{id_organisasi}/history', [Request_donasiController::class, 'historyByOrganisasi']);
-});
 
 
 Route::prefix('barang')->group(function () {
