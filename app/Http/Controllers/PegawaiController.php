@@ -12,49 +12,83 @@ use Illuminate\Support\Facades\Auth;
 
 class PegawaiController extends Controller
 {
-    public function register(Request $request)
+    public function addPegawai(Request $request)
     {
-        $request->validate([
-            'id_role' => 'required|integer',
-            'nama' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:pegawai,email',
-            'password' => 'required|string|min:8',
-            'tanggal_masuk' => 'required|date',
-            'tanggal_lahir' => 'required|date',
-        ]);
+        try {
+            $request->validate(
+                [
+                    'id_role' => 'required',
+                    'nama' => 'required|string|max:255',
+                    'email' => 'required|email|max:255|unique:pegawai,email',
+                    'password' => 'required|string|min:8',
+                    'tanggal_masuk' => 'required|date|before:today',
+                    'tanggal_lahir' => 'required|date|before:today',
+                    'wallet' => 'required',
+                ],
+                [
+                    'email.required' => 'Email is required',
+                    'email.email' => 'Email must be a valid email address',
+                    'email.max' => 'Email must not exceed 255 characters',
+                    'password.required' => 'Password is required',
+                    'password.min' => 'Password must be at least 8 characters',
+                    'tanggal_masuk.required' => 'Tanggal Masuk is required',
+                    'tanggal_lahir.required' => 'Tanggal Lahir is required',
+                    'nama.required' => 'Name is required',
+                    'id_role.required' => 'Role ID is required',
+                ]
+            );
 
-        $pegawai = Pegawai::create([
-            'id_role' => $request->id_role,
-            'nama' => $request->nama,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'tanggal_masuk' => $request->tanggal_masuk,
-            'tanggal_lahir' => $request->tanggal_lahir,
-        ]);
+            $pegawai = Pegawai::create([
+                'id_role' => $request->id_role,
+                'nama' => $request->nama,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'tanggal_masuk' => $request->tanggal_masuk,
+                'tanggal_lahir' => $request->tanggal_lahir,
+                'wallet' => $request->wallet,
+            ]);
+            return response()->json([
+                'message' => 'Data added successfully',
+                'pegawai' => $pegawai,
+            ], 201);
+
         
-        return response()->json([
-            "status" => true,
-            "message" => "Pegawai registered successfully",
-            "data" => $pegawai
-        ], 201);
-        
+            $cekEmail = Pegawai::where('email', $request->email)->where('id_pegawai', '!=', $pegawaiId)->exists();
+            if ($cekEmail) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Email already exists',
+                ], 400);
+            }
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $e->validator->errors(),
+            ], 422);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to add data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function index()
     {
-        $pegawai = Pegawai::all();
-        if ($pegawai->isEmpty()) {
+        try{
+            $pegawai = Pegawai::all();
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $pegawai
+            ], 200);
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'No Pegawai found',
-                'data' => null
-            ], 404);
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-        return response()->json([
-            'status' => true,
-            'message' => 'Pegawai retrieved successfully',
-            'data' => $pegawai
-        ], 200);
     }
 
     public function show($id)
@@ -74,71 +108,96 @@ class PegawaiController extends Controller
         ], 200);
     }
 
-    public function update(Request $request, $pegawaiId)
+    public function updatePegawai(Request $request, $pegawaiId)
     {
-        $pegawai = Pegawai::find($pegawaiId);
-        if (!$pegawai) {
+        try{
+            $pegawai = Pegawai::findOrFail($pegawaiId);
+    
+            $validatedData = $request->validate([
+                'id_role' => 'sometimes|exists:role,id_role',
+                'nama' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|max:255|unique:pegawai,email,' . $pegawai->id_pegawai . ',id_pegawai',
+                'password' => 'sometimes|string|min:8',
+                'tanggal_masuk' => 'required|date|before:today',
+                'tanggal_lahir' => 'required|date|before:today',
+                'wallet' => 'sometimes',
+            ],[
+                'email.unique' => 'Email already exists',
+                'password.min' => 'Password must be at least 8 characters',
+                'tanggal_masuk.date' => 'Invalid date format for Tanggal Masuk',
+            ]);
+
+            if ($request->has('password') && $request->password !== null) {
+                $validatedData['password'] = Hash::make($request->password); 
+            } else {
+                $validatedData['password'] = $pegawai->password; 
+            }
+
+            $cekEmail = Pegawai::where('email', $request->email)->where('id_pegawai', '!=', $pegawaiId)->exists();
+            if ($cekEmail) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Email already exists',
+                ], 400);
+            }
+            $pegawai->update($validatedData);
+
+            return response()->json([
+                "status" => true,
+                "message" => "Pegawai updated successfully",
+                "data" => $pegawai
+            ], 200);
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Pegawai not found',
-                'data' => null
+                'error' => $e->getMessage(),
             ], 404);
         }
-        
-        $validatedData = $request->validate([
-            'id_role' => 'sometimes|integer|exists:role,id_role',
-            'nama' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255|unique:pegawai,email,' . $pegawai->id_pegawai,
-            'password' => 'sometimes|string|min:8',
-            'tanggal_masuk' => 'sometimes|date',
-            'tanggal_lahir' => 'sometimes|date',
-        ]);
-
-        if ($request->has('password') && !empty($request->password)) {
-            $pegawai->password = Hash::make($request->password);
-        }    
-
-        $pegawai->update($validatedData);
-
-        return response()->json([
-            "status" => true,
-            "message" => "Pegawai updated successfully",
-            "data" => $pegawai
-        ], 200);
     }
 
-    public function destroy($id)
-    {
-        $pegawai = Pegawai::find($id);
+        public function deletePegawai($id)
+        {
+            try{
+                $pegawai = Pegawai::findOrFail($id);
+                $pegawai->delete();
+                
+                return response()->json([
+                    "status" => true,
+                    "message" => "Pegawai berhasil dihapus.",
+                    "data" => null
+                ], 200);
+            } catch (Exception $e) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Pegawai not found',
+                    'error' => $e->getMessage(),
+                ], 404);
+            }
+        }
 
-        if (!$pegawai) {
+
+
+    public function searchPegawai(Request $request)
+    {
+        try {
+            $query = $request->input('query');
+            $pegawai = Pegawai::where('nama', 'LIKE', "%$query%")
+                ->orWhere('email', 'LIKE', "%$query%")
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $pegawai
+            ], 200);
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Pegawai tidak ditemukan'
-            ], 404);
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $pegawai->delete();
-        return response()->json([
-            "status" => true,
-            "message" => "Pegawai berhasil dihapus.",
-            "data" => null
-        ], 200);
-    }
-
-    public function search(Request $request)
-    {
-        $keyword = $request->query('keyword');
-
-        $pegawai = Pegawai::where('nama', 'like', "%{$keyword}%")
-                        ->orWhere('email', 'like', "%{$keyword}%")
-                        ->get();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Pencarian pegawai berhasil',
-            'data' => $pegawai
-        ], 200);
     }
 
 }

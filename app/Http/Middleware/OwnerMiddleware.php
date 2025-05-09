@@ -17,7 +17,7 @@ class OwnerMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $pegawai = Auth::guard('pegawai')->user();
-        if($pegawai && $pegawai->role->nama_role == 'Owner'){
+        if($pegawai && $pegawai->getRoleAttribute() == 'Owner'){
             return $next($request);
         }
         return response()->json([

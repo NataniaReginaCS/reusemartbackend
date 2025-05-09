@@ -12,6 +12,9 @@ use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PenitipController;
 use App\Http\Controllers\OrganisasiController;
 use App\Http\Controllers\AlamatController;
+
+
+
 use App\Http\Middleware\OwnerMiddleware;
 use App\Http\Middleware\PenitipMiddleware;
 use App\Http\Middleware\PembeliMiddleware;
@@ -21,7 +24,7 @@ use App\Http\Middleware\GudangMiddleware;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\KurirMiddleware;
 use App\Http\Middleware\HunterMiddleware;
-
+use App\Http\Controllers\KategoriController;
 
 
 
@@ -43,6 +46,16 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/registerPembeli', [AuthController::class, 'registerPembeli']);
 Route::post('/registerOrganisasi', [AuthController::class, 'registerOrganisasi']);
+Route::get('/fetchKategori', [KategoriController::class, 'fetchKategori']); 
+Route::get('/showBarangbyKategori/{id_kategori}', [BarangController::class, 'showBarangbyKategori']);
+Route::get('/relatedProducts/{id_kategori}', [BarangController::class, 'relatedProducts']);
+Route::get('/fetchBarang', [BarangController::class, 'index']);
+Route::get('/showBarang/{id}', [BarangController::class, 'show']);
+Route::post('/searchBarang', [BarangController::class, 'searchBarang']);
+Route::get('/showBarangIsGaransi', [BarangController::class, 'showBarangIsGaransi']);
+Route::get('/showBarangIsNotGaransi', [BarangController::class, 'showBarangIsNotGaransi']);
+Route::get('/showNamaPenitip/{id}', [BarangController::class, 'showNamaPenitip']);
+
 
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
@@ -58,7 +71,7 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
-
+    Route::get('/fetchPenitipByLogin', [PenitipController::class, 'fetchPenitipByLogin']);
 });
 
 Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function () {
@@ -87,14 +100,22 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
-});
+
 Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
+
 Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
 Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
 Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
 Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
 Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
 Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+});
+
+
+
+});
+
+
 
 
 
