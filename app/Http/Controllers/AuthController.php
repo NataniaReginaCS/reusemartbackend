@@ -183,7 +183,7 @@ class AuthController extends Controller
         if($user){
             return response()->json([
                 'role' => $user->role,
-            ], 200);
+            ], 200);    
         }
         return response()->json([
             'message' => 'Unauthorized',
