@@ -33,7 +33,7 @@ class Penitip extends Authenticatable
     public function getRoleAttribute() {
         return 'Penitip';
     }
-
+    
     public function penitipKomisi(): HasMany
     {
         return $this->hasMany(Komisi::class, 'id_penitip');

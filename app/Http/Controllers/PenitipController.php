@@ -69,10 +69,26 @@ class PenitipController extends Controller
             ], 500);
         }
     }
+    public function fetchPenitipByLogin(Request $request)
+    {
+        try {
+            $penitip = Auth::guard('penitip')->user();
+            return response()->json([
+                'penitip' => $penitip,
+                'message' => 'Data retrieved successfully',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function fetchPenitip(Request $request)
     {
         try {
-            $penitip = Penitip::all();
+            $penitip = Penitip::all();;
             return response()->json([
                 'penitip' => $penitip,
                 'message' => 'Data retrieved successfully',

@@ -12,6 +12,9 @@ use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PenitipController;
 use App\Http\Controllers\OrganisasiController;
 use App\Http\Controllers\AlamatController;
+
+
+
 use App\Http\Middleware\OwnerMiddleware;
 use App\Http\Middleware\PenitipMiddleware;
 use App\Http\Middleware\PembeliMiddleware;
@@ -68,7 +71,7 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
-
+    Route::get('/fetchPenitipByLogin', [PenitipController::class, 'fetchPenitipByLogin']);
 });
 
 Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function () {
@@ -85,21 +88,29 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
-});
+    Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
 
-Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
+  Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
 Route::post('/updatePegawai/{id}', [PegawaiController::class, 'updatePegawai']);
 Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
 Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
 Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
 
 Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
+
 Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
 Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
 Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
 Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
 Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
 Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+});
+
+
+
+});
+
+
 
 
 Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
