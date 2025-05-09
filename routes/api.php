@@ -87,13 +87,26 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
 });
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
+
     Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
+
+  Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
+Route::post('/updatePegawai/{id}', [PegawaiController::class, 'updatePegawai']);
+Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
+Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
+Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
+
+Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
+
 Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
 Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
 Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
 Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
 Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
 Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+});
+
+
 
 });
 
