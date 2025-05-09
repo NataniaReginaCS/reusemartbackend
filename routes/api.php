@@ -24,7 +24,7 @@ use App\Http\Middleware\GudangMiddleware;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\KurirMiddleware;
 use App\Http\Middleware\HunterMiddleware;
-
+use App\Http\Controllers\KategoriController;
 
 
 
@@ -46,6 +46,16 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/registerPembeli', [AuthController::class, 'registerPembeli']);
 Route::post('/registerOrganisasi', [AuthController::class, 'registerOrganisasi']);
+Route::get('/fetchKategori', [KategoriController::class, 'fetchKategori']); 
+Route::get('/showBarangbyKategori/{id_kategori}', [BarangController::class, 'showBarangbyKategori']);
+Route::get('/relatedProducts/{id_kategori}', [BarangController::class, 'relatedProducts']);
+Route::get('/fetchBarang', [BarangController::class, 'index']);
+Route::get('/showBarang/{id}', [BarangController::class, 'show']);
+Route::post('/searchBarang', [BarangController::class, 'searchBarang']);
+Route::get('/showBarangIsGaransi', [BarangController::class, 'showBarangIsGaransi']);
+Route::get('/showBarangIsNotGaransi', [BarangController::class, 'showBarangIsNotGaransi']);
+Route::get('/showNamaPenitip/{id}', [BarangController::class, 'showNamaPenitip']);
+
 
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {

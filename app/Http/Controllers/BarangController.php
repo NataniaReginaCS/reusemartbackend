@@ -12,17 +12,31 @@ class BarangController extends Controller
 {
     public function index()
     {
-        $barangs = Barang::all();
-        return response()->json([
-            'status' => true,
-            'message' => 'Data Barang',
-            'data' => $barangs
-        ]);
+        try{
+            $barangs = Barang::where('status_barang', 'tersedia')->get();
+            $barangs = $barangs->map(function ($barang) {
+                $barang->foto = asset($barang->foto);
+                return $barang;
+            });
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $barangs,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function show($id)
     {
         $barang = Barang::find($id);
+        $barang->foto = asset($barang->foto);
+
         if ($barang) {
             return response()->json([
                 'status' => true,
@@ -144,11 +158,25 @@ class BarangController extends Controller
         ]);
     }
 
-    public function search(Request $request)
+    public function searchBarang(Request $request)
     {
         $query = $request->input('query');
-        $barangs = Barang::where('nama_barang', 'LIKE', "%$query%")->get();
 
+        if (!$query) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Query is required',
+                'data' => []
+            ], 400);
+        }
+        $barangs = Barang::where('nama', 'LIKE', "%$query%")
+        ->where('status_barang', 'tersedia')
+        ->get();
+
+        $barangs = $barangs->map(function ($barang) {
+            $barang->foto = asset($barang->foto);
+            return $barang;
+        });
         return response()->json([
             'status' => true,
             'message' => 'Search results',
@@ -156,9 +184,20 @@ class BarangController extends Controller
         ]);
     }
 
-    public function available()
+    public function showBarangIsGaransi()
     {
-        $barangs = Barang::where('status_barang', 'tersedia')->get();
+        $barangs = Barang::where('isGaransi', true)
+            ->where('akhir_garansi', '>=', now()->toDateString())
+            ->where('status_barang', 'tersedia')
+            ->get();
+
+
+        if ($barangs->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No items available for purchase'
+            ], 404);
+        }
 
         return response()->json([
             'status' => true,
@@ -167,26 +206,125 @@ class BarangController extends Controller
         ]);
     }
 
-    public function checkGaransi($id)
+    public function showBarangIsNotGaransi()
     {
-        $barang = Barang::find($id);
+        $barangs = Barang::where('isGaransi', false)
+            ->where('status_barang', 'tersedia')
+            ->get();
 
-        if (!$barang) {
+        if ($barangs->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No items available for purchase'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Barang yang bisa dibeli',
+            'data' => $barangs
+        ]);
+    }
+
+    public function relatedProducts($id_kategori)
+    {
+        if((int)$id_kategori <= 10){
+            $barang = Barang::where('id_kategori', '<', 10)->get();
+        }else{
+            $barang = Barang::where('id_kategori', 'like', "$id_kategori%")
+            ->where('id_kategori', '>', 10)
+            ->get();
+        }
+
+        $barang = $barang->where('status_barang', 'tersedia');
+        $barang = $barang->map(function ($barang) {
+            $barang->foto = asset($barang->foto);
+            return $barang;
+        });
+        if ($barang->isEmpty()) {
             return response()->json([
                 'status' => false,
                 'message' => 'Barang not found'
             ], 404);
         }
 
-        $today = now()->toDateString();
-        $garansiAktif = $today <= $barang->akhir_garansi;
+        return response()->json([
+            'status' => true,
+            'message' => 'Data Barang',
+            'data' => $barang
+        ]);
+    }
+
+    public function showBarangbyKategori($id_kategori)
+    {
+        if($id_kategori === '0' ){
+            $barang = Barang::where('id_kategori', '<', 10)
+            ->where('status_barang', 'tersedia')
+            ->get();
+        }else{
+            $barang = Barang::where('id_kategori', 'like', "$id_kategori%")
+            ->where('id_kategori', '>', 10)
+            ->where('status_barang', 'tersedia')
+            ->get();
+        }
+
+        if ($barang->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Barang not found',
+                'data' => []
+            ], 200);
+        }
 
         return response()->json([
             'status' => true,
-            'garansi_aktif' => $garansiAktif,
-            'message' => $garansiAktif ? 'Garansi masih berlaku' : 'Garansi sudah habis',
+            'message' => 'Data Barang',
             'data' => $barang
         ]);
+    }
+
+    public function cekBarangGaransibyTanggalGaransi($id_barang){
+        try{
+            $barang = Barang::find($id_barang);
+            if (!$barang) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Barang not found'
+                ], 404);
+            }
+
+            $today = now()->toDateString();
+            $garansiAktif = $today <= $barang->akhir_garansi;
+
+            return response()->json([
+                'status' => true,
+                'garansi_aktif' => $garansiAktif,
+                'message' => $garansiAktif ? 'Garansi masih berlaku' : 'Garansi sudah habis',
+                'data' => $barang
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to check garansi',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function filterBarangByHarga(Request $request)
+    {
+        $query = Barang::query();
+
+        if ($request->has('min_price') && $request->has('max_price')) {
+            $query->whereBetween('harga', [$request->min_price, $request->max_price]);
+        } elseif ($request->has('max_price')) {
+            $query->where('harga', '<=', $request->max_price);
+        } elseif ($request->has('min_price')) {
+            $query->where('harga', '>=', $request->min_price);
+        }
+        $query->where('status_barang', 'tersedia');
+        $query->orderBy('harga', 'asc');
+        return response()->json($query->get());
     }
 
 }
