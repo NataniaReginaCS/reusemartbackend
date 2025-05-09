@@ -18,29 +18,32 @@ use Illuminate\Support\Facades\File;
 
 class AuthController extends Controller
 {
-    public function registerPembeli(Request $request){
-        try{
+    public function registerPembeli(Request $request)
+    {
+        try {
 
-            $request->validate([
-                'nama' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
-                'password' => 'required|string',
-                'telepon' => 'required|string|unique:pembeli',
-                'foto' => 'nullable|string|max:255',
-            ],
-            [
-                'email.required' => 'Email is required',
-                'email.email' => 'Email must be a valid email address',
-                'email.max' => 'Email must not exceed 255 characters',
-                'password.required' => 'Password is required',
-                'telepon.required' => 'Phone number is required',
-                'telepon.unique' => 'Phone number already exists',
-                'foto.max' => 'Picture must not exceed 2 mb',
-            ]);
+            $request->validate(
+                [
+                    'nama' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255',
+                    'password' => 'required|string',
+                    'telepon' => 'required|string|unique:pembeli',
+                    'foto' => 'nullable|string|max:255',
+                ],
+                [
+                    'email.required' => 'Email is required',
+                    'email.email' => 'Email must be a valid email address',
+                    'email.max' => 'Email must not exceed 255 characters',
+                    'password.required' => 'Password is required',
+                    'telepon.required' => 'Phone number is required',
+                    'telepon.unique' => 'Phone number already exists',
+                    'foto.max' => 'Picture must not exceed 2 mb',
+                ]
+            );
 
-            $cekEmail = DB::table('pembeli')->where('email', $request->email)->exists() || 
-            DB::table('organisasi')->where('email', $request->email)->exists() || 
-            DB::table('penitip')->where('email', $request->email)->exists();
+            $cekEmail = DB::table('pembeli')->where('email', $request->email)->exists() ||
+                DB::table('organisasi')->where('email', $request->email)->exists() ||
+                DB::table('penitip')->where('email', $request->email)->exists();
             if ($cekEmail) {
                 return response()->json([
                     'message' => 'Email already exists',
@@ -48,7 +51,7 @@ class AuthController extends Controller
             }
 
             $fotoPath = $request->foto ? $request->foto : 'profile/default.png';
-        
+
             $pembeli = Pembeli::create([
                 'nama' => $request->nama,
                 'email' => $request->email,
@@ -57,91 +60,94 @@ class AuthController extends Controller
                 'poin' => 0,
                 'foto' => $fotoPath,
             ]);
-            
+
             $keranjang = Keranjang::create([
                 'id_pembeli' => $pembeli->id_pembeli,
             ]);
-            
+
             return response()->json([
                 'pembeli' => $pembeli,
                 'message' => 'User  registered sucessfully',
             ], 201, [], JSON_UNESCAPED_SLASHES);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to register user',
                 'error' => $e->getMessage(),
             ], 500);
-        }               
+        }
     }
 
-    public function registerOrganisasi(Request $request){
-        try{
+    public function registerOrganisasi(Request $request)
+    {
+        try {
 
-            $request->validate([
-                'nama' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
-                'alamat' => 'required|string',
-                'telp' => 'required|string|unique:organisasi',
-                'password' => 'required|string|min:8',
-                'foto' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            ],
-            [
-                'email.required' => 'Email is required',
-                'email.email' => 'Email must be a valid email address',
-                'email.max' => 'Email must not exceed 255 characters',
-                'password.required' => 'Password is required',
-                'telp.required' => 'Phone number is required',
-                'telp.unique' => 'Phone number already exists',
-                'foto.max' => 'Picture must not exceed 2 mb',
-            ]);
+            $request->validate(
+                [
+                    'nama' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255',
+                    'alamat' => 'required|string',
+                    'telp' => 'required|string|unique:organisasi',
+                    'password' => 'required|string|min:8',
+                    'foto' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                ],
+                [
+                    'email.required' => 'Email is required',
+                    'email.email' => 'Email must be a valid email address',
+                    'email.max' => 'Email must not exceed 255 characters',
+                    'password.required' => 'Password is required',
+                    'telp.required' => 'Phone number is required',
+                    'telp.unique' => 'Phone number already exists',
+                    'foto.max' => 'Picture must not exceed 2 mb',
+                ]
+            );
 
             $cekEmail = DB::table('pembeli')->where('email', $request->email)->exists() ||
-            DB::table('organisasi')->where('email', $request->email)->exists() ||
-            DB::table('penitip')->where('email', $request->email)->exists();
+                DB::table('organisasi')->where('email', $request->email)->exists() ||
+                DB::table('penitip')->where('email', $request->email)->exists();
             if ($cekEmail) {
                 return response()->json([
                     'message' => 'Email already exists',
                 ], 400);
             }
 
-            
+
             $foto = $request->file('foto');
             $fotoPath = $foto->store('images/organisasi', 'public');
             $uploadFotoPath = basename($fotoPath);
-        
+
             $organisasi = Organisasi::create([
                 'nama' => $request->nama,
                 'email' => $request->email,
                 'alamat' => $request->alamat,
-                'telp' => $request->telp,  
+                'telp' => $request->telp,
                 'password' => Hash::make($request->password),
                 'foto' => $fotoPath,
             ]);
-            
-            
+
+
             return response()->json([
                 'organisasi' => $organisasi,
                 'message' => 'User  registered sucessfully',
             ], 201, [], JSON_UNESCAPED_SLASHES);
-        }catch(ValidationException $e){
+        } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Validation error',
                 'error' => $e->validator->errors(),
             ], 422);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to register user',
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }   
+    }
 
     public function login(Request $request)
     {
         $userTypes = [
-            'pembeli' => Pembeli::class, 
-            'organisasi' => Organisasi::class, 
-            'penitip' => Penitip::class, 
+            'pembeli' => Pembeli::class,
+            'organisasi' => Organisasi::class,
+            'penitip' => Penitip::class,
             'pegawai' => Pegawai::class,
         ];
 
@@ -150,10 +156,10 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        foreach($userTypes as $userType => $model) {
+        foreach ($userTypes as $userType => $model) {
 
             $user = $model::where('email', $request->email)->first();
-        
+
             if ($user && Hash::check($request->password, $user->password)) {
                 $role = $user->role;
                 $token = $user->createToken('auth_token')->plainTextToken;
@@ -178,9 +184,10 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function cekRole(Request $request){
+    public function cekRole(Request $request)
+    {
         $user = $request->user();
-        if($user){
+        if ($user) {
             return response()->json([
                 'role' => $user->role,
             ], 200);    

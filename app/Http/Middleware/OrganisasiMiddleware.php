@@ -16,7 +16,7 @@ class OrganisasiMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(Auth::guard('organisasi')->check()){
+        if (Auth::guard('organisasi')->check()) {
             return $next($request);
         }
         return response()->json([

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Request_donasi;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class Request_donasiController extends Controller
 {
@@ -18,9 +19,11 @@ class Request_donasiController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Request $request)
     {
-        $request_donasi = Request_donasi::find($id);
+
+        $organisasi = $request->user();
+        $request_donasi = Request_donasi::where('id_organisasi', $organisasi->id_organisasi)->get();
         if ($request_donasi) {
             return response()->json([
                 'status' => true,
