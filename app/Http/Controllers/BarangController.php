@@ -173,6 +173,10 @@ class BarangController extends Controller
         ->where('status_barang', 'tersedia')
         ->get();
 
+        $barangs = $barangs->map(function ($barang) {
+            $barang->foto = asset($barang->foto);
+            return $barang;
+        });
         return response()->json([
             'status' => true,
             'message' => 'Search results',
