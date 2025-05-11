@@ -41,18 +41,23 @@ class Request_donasiController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'id_organisasi' => 'required|integer|exists:organisasi,id_organisasi',
             'tanggal_request' => 'required|date',
             'deskripsi' => 'required|string|max:255',
         ]);
 
         try {
+            // Get the logged-in user's organisasi ID
+            $user = auth()->user();
+            $validatedData['id_organisasi'] = $user->id_organisasi;
+
             $request_donasi = Request_donasi::create($validatedData);
+
             return response()->json([
                 'status' => true,
                 'message' => 'Request Donasi created successfully',
                 'data' => $request_donasi
             ], 201);
+
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
@@ -61,6 +66,7 @@ class Request_donasiController extends Controller
             ], 500);
         }
     }
+
 
     public function alokasi(Request $request, $id)
     {
