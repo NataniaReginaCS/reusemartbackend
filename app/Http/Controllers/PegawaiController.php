@@ -21,8 +21,8 @@ class PegawaiController extends Controller
                     'nama' => 'required|string|max:255',
                     'email' => 'required|email|max:255|unique:pegawai,email',
                     'password' => 'required|string|min:8',
-                    'tanggal_masuk' => 'required|date|before:today',
-                    'tanggal_lahir' => 'required|date|before:today',
+                    'tanggal_masuk' => 'required|date',
+                    'tanggal_lahir' => ['required', 'date', 'before:tanggal_masuk', 'before:today'],
                     'wallet' => 'required',
                 ],
                 [
@@ -118,13 +118,14 @@ class PegawaiController extends Controller
                 'nama' => 'sometimes|string|max:255',
                 'email' => 'sometimes|email|max:255|unique:pegawai,email,' . $pegawai->id_pegawai . ',id_pegawai',
                 'password' => 'sometimes|string|min:8',
-                'tanggal_masuk' => 'required|date|before:today',
-                'tanggal_lahir' => 'required|date|before:today',
+                'tanggal_masuk' => 'required|date',
+                'tanggal_lahir' => ['required', 'date', 'before:tanggal_masuk', 'before:today'],
                 'wallet' => 'sometimes',
             ],[
                 'email.unique' => 'Email already exists',
                 'password.min' => 'Password must be at least 8 characters',
                 'tanggal_masuk.date' => 'Invalid date format for Tanggal Masuk',
+
             ]);
 
             if ($request->has('password') && $request->password !== null) {

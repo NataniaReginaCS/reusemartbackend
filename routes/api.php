@@ -110,7 +110,11 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 });
 
 
-
+Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
+Route::post('/updatePegawai/{id}', [PegawaiController::class, 'updatePegawai']);
+Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
+Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
+Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
 
 
 
