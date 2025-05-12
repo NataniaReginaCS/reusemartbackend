@@ -25,7 +25,7 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\KurirMiddleware;
 use App\Http\Middleware\HunterMiddleware;
 use App\Http\Controllers\KategoriController;
-
+use App\Http\Controllers\DiskusiController;
 
 
 Route::get('/user', function (Request $request) {
@@ -55,7 +55,7 @@ Route::post('/searchBarang', [BarangController::class, 'searchBarang']);
 Route::get('/showBarangIsGaransi', [BarangController::class, 'showBarangIsGaransi']);
 Route::get('/showBarangIsNotGaransi', [BarangController::class, 'showBarangIsNotGaransi']);
 Route::get('/showNamaPenitip/{id}', [BarangController::class, 'showNamaPenitip']);
-
+Route::get('/fetchDiskusi/{idBarang}', [DiskusiController::class, 'fetchDiskusi']);
 
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
@@ -72,6 +72,8 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
     Route::get('/fetchPenitipByLogin', [PenitipController::class, 'fetchPenitipByLogin']);
+    Route::get('/fetchHistoryTransaksi', [PenitipController::class, 'fetchHistoryTransaksi']);
+    Route::get('/fetchHistoryTransaksiById/{id}', [PenitipController::class, 'fetchHistoryTransaksiById']);
 });
 
 Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function () {
@@ -79,9 +81,9 @@ Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function
 });
 
 Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
-
+    Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
 });
-
+Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
 Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 
 });
@@ -90,25 +92,28 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
     Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
 
-  Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
-Route::post('/updatePegawai/{id}', [PegawaiController::class, 'updatePegawai']);
-Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
-Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
-Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
+    Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
+    Route::post('/updatePegawai/{id}', [PegawaiController::class, 'updatePegawai']);
+    Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
+    Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
+    Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
+    
+   
 
-Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
 
-Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
-Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
-Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
-Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
-Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
-Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+
+    Route::get('/fetchOrganisasi', [OrganisasiController::class,  'fetchOrganisasi']);
+
+    Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
+    Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
+    Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
+    Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
+    Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
+    Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+    Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
 });
 
 
-
-});
 
 
 

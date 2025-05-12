@@ -200,4 +200,25 @@ class PegawaiController extends Controller
         }
     }
 
+    public function resetPasswordPegawai($id)
+    {
+        try{
+            $pegawai = Pegawai::findOrFail($id);
+            $pegawai->password = Hash::make($pegawai->tanggal_lahir);
+            $pegawai->save();
+            return response()->json([
+                'status' => true,
+                'message' => 'Password reset successfully', 
+                'pegawai' => $pegawai,
+                
+            ], 200);
+        }catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to reset password',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }
