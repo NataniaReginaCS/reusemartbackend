@@ -12,7 +12,7 @@ class Detail_donasi extends Model
     use HasFactory;
     public $timestamps = false;
     protected $table = "detail_donasi";
-    protected $primaryKey = 'id_detail_donasi';
+    protected $primaryKey = 'id_detaildonasi';
 
     protected $fillable = [
         'id_request',

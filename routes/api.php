@@ -25,6 +25,7 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\KurirMiddleware;
 use App\Http\Middleware\HunterMiddleware;
 use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\Detail_donasiController;
 
 
 
@@ -107,14 +108,14 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
     Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
     Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+
+    //Pegawai
+    Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
+    Route::post('/updatePegawai/{id}', [PegawaiController::class, 'updatePegawai']);
+    Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
+    Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
+    Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
 });
-
-
-Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
-Route::post('/updatePegawai/{id}', [PegawaiController::class, 'updatePegawai']);
-Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
-Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
-Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
 
 
 
@@ -122,29 +123,17 @@ Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
 
 
 Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
+    // Mendonasikan Barang
+    Route::get('/fetchRequest', [Detail_donasiController::class, 'fetchRequest']);
+    Route::get('/showOrganisasi', [Detail_donasiController::class, 'showOrganisasi']);
+    Route::post('/store', [Detail_donasiController::class, 'store']);
+    Route::post('/updateDonasi/{id}', [Detail_donasiController::class, 'updateDonasi']);
+    Route::get('/historyDonasibyOrganisasi/{id}', [Detail_donasiController::class, 'historyDonasibyOrganisasi']);
+    Route::get('/fetchDetailDonasi', [Detail_donasiController::class, 'fetchDetailDonasi']);
+    Route::get('/fetchBarangForDonasi', [Detail_donasiController::class, 'fetchBarangForDonasi']);
+    Route::get('/fetchAllBarang', [Detail_donasiController::class, 'fetchAllBarang']);
 
 });
 
-
-
-Route::prefix('barang')->group(function () {
-    Route::get('/', [BarangController::class, 'index']);
-    Route::get('/available', [BarangController::class, 'available']);
-    Route::get('/{id}', [BarangController::class, 'show']);
-    Route::get('/garansi/{id}', [BarangController::class, 'checkGaransi']);
-    Route::post('/', [BarangController::class, 'store']);
-    Route::put('/{id}', [BarangController::class, 'update']);
-    Route::delete('/{id}', [BarangController::class, 'destroy']);
-    Route::get('/search', [BarangController::class, 'search']);
-});
-
-Route::prefix('pegawai')->group(function () {
-    Route::post('/register', [PegawaiController::class, 'register']);
-    Route::get('/', [PegawaiController::class, 'index']);
-    Route::get('/{id}', [PegawaiController::class, 'show']);
-    Route::put('/{id}', [PegawaiController::class, 'update']);
-    Route::delete('/{id}', [PegawaiController::class, 'destroy']);
-    Route::get('/search', [PegawaiController::class, 'search']);
-});
 
 
