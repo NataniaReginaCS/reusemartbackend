@@ -18,6 +18,7 @@ class CSMiddleware
     {
         $pegawai = Auth::guard('pegawai')->user();
         if ($pegawai && $pegawai->getRoleAttribute() == 'CS') {
+
             return $next($request);
         }
         return response()->json([

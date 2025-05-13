@@ -115,6 +115,13 @@ Route::middleware('auth:sanctum')->get('/order-details/{id}', [PembelianControll
 Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
 
 Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
+
+    Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
+});
+
+Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
+Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
+
 });
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
@@ -133,6 +140,13 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
 
     Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
+
+    Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
+    Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
+    Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
+    Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+    Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
+
 });
 
 Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
