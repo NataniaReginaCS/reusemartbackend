@@ -21,8 +21,8 @@ class PegawaiController extends Controller
                     'nama' => 'required|string|max:255',
                     'email' => 'required|email|max:255|unique:pegawai,email',
                     'password' => 'required|string|min:8',
-                    'tanggal_masuk' => 'required|date|before:today',
-                    'tanggal_lahir' => 'required|date|before:today',
+                    'tanggal_masuk' => 'required|date',
+                    'tanggal_lahir' => ['required', 'date', 'before:tanggal_masuk', 'before:today'],
                     'wallet' => 'required',
                 ],
                 [
@@ -118,13 +118,14 @@ class PegawaiController extends Controller
                 'nama' => 'sometimes|string|max:255',
                 'email' => 'sometimes|email|max:255|unique:pegawai,email,' . $pegawai->id_pegawai . ',id_pegawai',
                 'password' => 'sometimes|string|min:8',
-                'tanggal_masuk' => 'required|date|before:today',
-                'tanggal_lahir' => 'required|date|before:today',
+                'tanggal_masuk' => 'required|date',
+                'tanggal_lahir' => ['required', 'date', 'before:tanggal_masuk', 'before:today'],
                 'wallet' => 'sometimes',
             ],[
                 'email.unique' => 'Email already exists',
                 'password.min' => 'Password must be at least 8 characters',
                 'tanggal_masuk.date' => 'Invalid date format for Tanggal Masuk',
+
             ]);
 
             if ($request->has('password') && $request->password !== null) {
@@ -195,6 +196,27 @@ class PegawaiController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function resetPasswordPegawai($id)
+    {
+        try{
+            $pegawai = Pegawai::findOrFail($id);
+            $pegawai->password = Hash::make($pegawai->tanggal_lahir);
+            $pegawai->save();
+            return response()->json([
+                'status' => true,
+                'message' => 'Password reset successfully', 
+                'pegawai' => $pegawai,
+                
+            ], 200);
+        }catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to reset password',
                 'error' => $e->getMessage(),
             ], 500);
         }

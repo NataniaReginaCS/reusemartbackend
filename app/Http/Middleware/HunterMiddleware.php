@@ -17,7 +17,7 @@ class HunterMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $pegawai = Auth::guard('pegawai')->user();
-        if($pegawai && $pegawai->role->nama_role == 'Hunter'){
+        if($pegawai && $pegawai->getRoleAttribute() == 'Hunter'){
             return $next($request);
         }
         return response()->json([
