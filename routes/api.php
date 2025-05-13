@@ -26,6 +26,7 @@ use App\Http\Middleware\KurirMiddleware;
 use App\Http\Middleware\HunterMiddleware;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\Detail_donasiController;
+use App\Http\Controllers\RoleController;
 
 
 
@@ -119,7 +120,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
 
 
-
+Route::get('/fetchRoles', [RoleController::class, 'fetchRoles']);
 
 
 Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
