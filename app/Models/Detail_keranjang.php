@@ -19,12 +19,12 @@ class Detail_keranjang extends Model
         'id_barang',
     ];
 
-    public function dtKeranjangKeranjang(): BelongsTo
+    public function keranjang()
     {
         return $this->belongsTo(Keranjang::class, 'id_keranjang');
     }
 
-    public function dtKeranjangBarang(): BelongsTo
+    public function barang()
     {
         return $this->belongsTo(Barang::class, 'id_barang');
     }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Pembelian extends Model
 {
     use HasFactory;
+
     public $timestamps = false;
     protected $table = "pembelian";
     protected $primaryKey = 'id_pembelian';
@@ -30,13 +31,14 @@ class Pembelian extends Model
         'nomor_nota',
     ];
 
-    public function pembelianKeranjang(): BelongsTo
+    public function keranjang(): BelongsTo
     {
-        return $this->hasMany(BelongsTo::class, 'id_pembelian');
+        return $this->belongsTo(Keranjang::class, 'id_keranjang');
     }
 
-    public function pembelianPegawai(): BelongsTo
+    public function pegawai(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'id_pegawai');
     }
 }
+

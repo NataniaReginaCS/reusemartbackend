@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Request_donasi;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class Request_donasiController extends Controller
 {
@@ -18,9 +19,11 @@ class Request_donasiController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Request $request)
     {
-        $request_donasi = Request_donasi::find($id);
+
+        $organisasi = $request->user();
+        $request_donasi = Request_donasi::where('id_organisasi', $organisasi->id_organisasi)->get();
         if ($request_donasi) {
             return response()->json([
                 'status' => true,
@@ -38,18 +41,23 @@ class Request_donasiController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'id_organisasi' => 'required|integer|exists:organisasi,id_organisasi',
             'tanggal_request' => 'required|date',
             'deskripsi' => 'required|string|max:255',
         ]);
 
         try {
+            // Get the logged-in user's organisasi ID
+            $user = auth()->user();
+            $validatedData['id_organisasi'] = $user->id_organisasi;
+
             $request_donasi = Request_donasi::create($validatedData);
+
             return response()->json([
                 'status' => true,
                 'message' => 'Request Donasi created successfully',
                 'data' => $request_donasi
             ], 201);
+
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
@@ -58,6 +66,7 @@ class Request_donasiController extends Controller
             ], 500);
         }
     }
+
 
     public function alokasi(Request $request, $id)
     {
