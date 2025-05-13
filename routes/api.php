@@ -59,6 +59,7 @@ Route::get('/showBarangIsGaransi', [BarangController::class, 'showBarangIsGarans
 Route::get('/showBarangIsNotGaransi', [BarangController::class, 'showBarangIsNotGaransi']);
 Route::get('/showNamaPenitip/{id}', [BarangController::class, 'showNamaPenitip']);
 Route::get('/fetchDiskusi/{idBarang}', [DiskusiController::class, 'fetchDiskusi']);
+Route::get('/fetchRoles', [RoleController::class, 'fetchRoles']);
 
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
@@ -98,9 +99,9 @@ Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function
 Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
     Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
 });
-Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
-Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 
+Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
+    Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
@@ -113,10 +114,6 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
     Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
     
-   
-
-
-
     Route::get('/fetchOrganisasi', [OrganisasiController::class,  'fetchOrganisasi']);
 
     Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
@@ -127,11 +124,6 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
     Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
 });
-
-
-
-
-
 
 Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
     // Mendonasikan Barang
