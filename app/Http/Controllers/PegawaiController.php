@@ -108,54 +108,52 @@ class PegawaiController extends Controller
         ], 200);
     }
 
-    public function updatePegawai(Request $request, $pegawaiId)
-    {
-        try{
-            $pegawai = Pegawai::findOrFail($pegawaiId);
-    
-            $validatedData = $request->validate([
-                'id_role' => 'sometimes|exists:role,id_role',
-                'nama' => 'sometimes|string|max:255',
-                'email' => 'sometimes|email|max:255|unique:pegawai,email,' . $pegawai->id_pegawai . ',id_pegawai',
-                'password' => 'sometimes|string|min:8',
-                'tanggal_masuk' => 'required|date',
-                'tanggal_lahir' => ['required', 'date', 'before:tanggal_masuk', 'before:today'],
-                'wallet' => 'sometimes',
-            ],[
-                'email.unique' => 'Email already exists',
-                'password.min' => 'Password must be at least 8 characters',
-                'tanggal_masuk.date' => 'Invalid date format for Tanggal Masuk',
+        public function updatePegawai(Request $request, $pegawaiId)
+        {
+            try{
+                $pegawai = Pegawai::findOrFail($pegawaiId);
+        
+                $validatedData = $request->validate([
+                    'id_role' => 'sometimes|exists:role,id_role',
+                    'nama' => 'sometimes|string|max:255',
+                    'email' => 'sometimes|email|max:255|unique:pegawai,email,' . $pegawai->id_pegawai . ',id_pegawai',
+                    'password' => 'nullable|string|min:8',
+                    'tanggal_masuk' => 'required|date',
+                    'tanggal_lahir' => ['required', 'date', 'before:tanggal_masuk', 'before:today'],
+                    'wallet' => 'sometimes',
+                ],[
+                    'email.unique' => 'Email already exists',
+                    'password.min' => 'Password must be at least 8 characters',
+                    'tanggal_masuk.date' => 'Invalid date format for Tanggal Masuk',
 
-            ]);
+                ]);
 
-            if ($request->has('password') && $request->password !== null) {
-                $validatedData['password'] = Hash::make($request->password); 
-            } else {
-                $validatedData['password'] = $pegawai->password; 
-            }
+                if ($request->filled('password') && $request->password !== null && $request->password !== '' && $request->has('password')) {
+                    $validatedData['password'] = Hash::make($request->password);
+                }
 
-            $cekEmail = Pegawai::where('email', $request->email)->where('id_pegawai', '!=', $pegawaiId)->exists();
-            if ($cekEmail) {
+                $cekEmail = Pegawai::where('email', $request->email)->where('id_pegawai', '!=', $pegawaiId)->exists();
+                if ($cekEmail) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Email already exists',
+                    ], 400);
+                }
+                $pegawai->update($validatedData);
+
+                return response()->json([
+                    "status" => true,
+                    "message" => "Pegawai updated successfully",
+                    "data" => $pegawai
+                ], 200);
+            } catch (Exception $e) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Email already exists',
-                ], 400);
+                    'message' => 'Pegawai not found',
+                    'error' => $e->getMessage(),
+                ], 404);
             }
-            $pegawai->update($validatedData);
-
-            return response()->json([
-                "status" => true,
-                "message" => "Pegawai updated successfully",
-                "data" => $pegawai
-            ], 200);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Pegawai not found',
-                'error' => $e->getMessage(),
-            ], 404);
         }
-    }
 
         public function deletePegawai($id)
         {
