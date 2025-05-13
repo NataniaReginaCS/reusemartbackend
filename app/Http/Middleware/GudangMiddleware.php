@@ -17,7 +17,7 @@ class GudangMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $pegawai = Auth::guard('pegawai')->user();
-        if($pegawai && $pegawai->role->nama_role == 'Gudang'){
+        if($pegawai && $pegawai->getRoleAttribute() == 'Gudang'){
             return $next($request);
         }
         return response()->json([

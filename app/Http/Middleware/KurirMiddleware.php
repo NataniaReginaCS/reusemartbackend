@@ -17,7 +17,7 @@ class KurirMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $pegawai = Auth::guard('pegawai')->user();
-        if($pegawai && $pegawai->role->nama_role == 'Kurir'){
+        if($pegawai && $pegawai->getRoleAttribute() == 'Kurir'){
             return $next($request);
         }
         return response()->json([
