@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use App\Models\Detail_keranjang;
 class Keranjang extends Model
 {
     use HasFactory;
+
     public $timestamps = false;
     protected $table = "keranjang";
     protected $primaryKey = 'id_keranjang';
@@ -18,14 +19,16 @@ class Keranjang extends Model
         'id_pembeli',
     ];
 
-    public function keranjangPembeli(): BelongsTo
+    public function pembeli(): BelongsTo
     {
         return $this->belongsTo(Pembeli::class, 'id_pembeli');
     }
-
-    public function keranjangPembelian(): HasMany
+    public function detailKeranjang()
     {
-        return $this->belongsTo(HasMany::class, 'id_keranjang');
+        return $this->hasMany(Detail_keranjang::class, 'id_keranjang');
     }
-
+    public function pembelian(): HasMany
+    {
+        return $this->hasMany(Pembelian::class, 'id_keranjang');
+    }
 }

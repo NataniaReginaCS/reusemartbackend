@@ -46,4 +46,15 @@ class Barang extends Model
     {
         return $this->HasMany(Alamat::class, 'id_pembeli');
     }
+
+    public function detailKeranjang()
+    {
+        return $this->hasMany(Detail_keranjang::class, 'id_barang');
+    }
+    // Barang.php
+    public function getFotoUrlAttribute()
+    {
+        return asset('storage/' . $this->foto);
+    }
+
 }

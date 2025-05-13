@@ -12,7 +12,7 @@ use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PenitipController;
 use App\Http\Controllers\OrganisasiController;
 use App\Http\Controllers\AlamatController;
-
+use App\Http\Controllers\PembelianController;
 
 
 use App\Http\Middleware\OwnerMiddleware;
@@ -91,8 +91,15 @@ Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function
 });
 
 Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
-
+    Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
+    Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
+    Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
+    Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
 });
+
+Route::middleware('auth:sanctum')->get('/order-history', [PembelianController::class, 'getOrderHistory']);
+Route::middleware('auth:sanctum')->get('/order-history/{id}', [PembelianController::class, 'getOrderHistoryById']);
+Route::middleware('auth:sanctum')->get('/order-details/{id}', [PembelianController::class, 'getOrderDetails']);
 
 Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 
@@ -103,10 +110,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
     Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
     Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
-    Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
-    Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
-    Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
-    Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+
 });
 
 
