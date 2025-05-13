@@ -97,6 +97,7 @@ Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function
 });
 
 Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
+    Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
     Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
     Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
     Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
@@ -107,14 +108,19 @@ Route::middleware('auth:sanctum')->get('/order-history', [PembelianController::c
 Route::middleware('auth:sanctum')->get('/order-history/{id}', [PembelianController::class, 'getOrderHistoryById']);
 Route::middleware('auth:sanctum')->get('/order-details/{id}', [PembelianController::class, 'getOrderDetails']);
 
-Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
+Route::middleware('auth:sanctum')->get('/order-history', [PembelianController::class, 'getOrderHistory']);
+Route::middleware('auth:sanctum')->get('/order-history/{id}', [PembelianController::class, 'getOrderHistoryById']);
+Route::middleware('auth:sanctum')->get('/order-details/{id}', [PembelianController::class, 'getOrderDetails']);
 
+Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
+
+Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 
     Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
 });
 
 Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
-    Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
+Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 
 });
 
@@ -127,16 +133,15 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
     Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
     Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
     Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
-    
-    Route::get('/fetchOrganisasi', [OrganisasiController::class,  'fetchOrganisasi']);
+
+    Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
 
     Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
     Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
 
-    Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
-    Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
-    Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
-    Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+    Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
+
+
     Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
 
 });
