@@ -141,10 +141,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
     Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
 
-    Route::post('/addPenitip', [PenitipController::class, 'addPenitip']);
-    Route::get('/fetchPenitip', [PenitipController::class, 'fetchPenitip']);
-    Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
-    Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
+
     Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
 
 });
