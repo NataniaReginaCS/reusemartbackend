@@ -128,8 +128,11 @@ class PegawaiController extends Controller
 
                 ]);
 
-                if ($request->filled('password') && $request->password !== null && $request->password !== '' && $request->has('password')) {
-                    $validatedData['password'] = Hash::make($request->password);
+                $passwordInput = $request->input('password');
+                if ($passwordInput !== null && $passwordInput !== '') {
+                    $validatedData['password'] = Hash::make($passwordInput);
+                } else {
+                    unset($validatedData['password']);
                 }
 
                 $cekEmail = Pegawai::where('email', $request->email)->where('id_pegawai', '!=', $pegawaiId)->exists();
