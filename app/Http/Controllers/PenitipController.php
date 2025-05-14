@@ -45,6 +45,8 @@ class PenitipController extends Controller
                 $foto = $request->file('foto_ktp');
                 $fotoPath = $foto->store('images/penitip', 'public');
             }
+            \Log::info('no_ktp from request:', ['no_ktp' => $request->no_ktp]);
+
             $penitip = Penitip::create([
                 'nama' => $request->nama,
                 'telepon' => $request->telepon,
@@ -88,7 +90,8 @@ class PenitipController extends Controller
     public function fetchPenitip(Request $request)
     {
         try {
-            $penitip = Penitip::all();;
+            $penitip = Penitip::all();
+            ;
             return response()->json([
                 'penitip' => $penitip,
                 'message' => 'Data retrieved successfully',
@@ -195,77 +198,79 @@ class PenitipController extends Controller
         }
     }
 
-     public function fetchHistoryTransaksi(){
-        try{
+    public function fetchHistoryTransaksi()
+    {
+        try {
 
             $penitip = Auth::guard('penitip')->user();
-            
-            $idPenitip = $penitip->id_penitip; 
-            
+
+            $idPenitip = $penitip->id_penitip;
+
             $data = DB::table('pembelian')
-            ->join('keranjang', 'pembelian.id_keranjang', '=', 'keranjang.id_keranjang')
-            ->join('detail_keranjang', 'keranjang.id_keranjang', '=', 'detail_keranjang.id_keranjang')
-            ->join('barang', 'detail_keranjang.id_barang', '=', 'barang.id_barang')
-            ->join('komisi', 'barang.id_barang', '=', 'komisi.id_barang')
-            ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
-            ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
-            ->where('penitip.id_penitip', $idPenitip)
-            ->select(
-                'barang.id_barang as id_barang',
-                'penitip.nama as nama_penitip',
-                'barang.nama as nama_barang',
-                'pembelian.tanggal_lunas',
-                'barang.harga as harga',
-                'barang.foto as foto_barang',
-                'barang.status_barang as status_barang',
-                
+                ->join('keranjang', 'pembelian.id_keranjang', '=', 'keranjang.id_keranjang')
+                ->join('detail_keranjang', 'keranjang.id_keranjang', '=', 'detail_keranjang.id_keranjang')
+                ->join('barang', 'detail_keranjang.id_barang', '=', 'barang.id_barang')
+                ->join('komisi', 'barang.id_barang', '=', 'komisi.id_barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->where('penitip.id_penitip', $idPenitip)
+                ->select(
+                    'barang.id_barang as id_barang',
+                    'penitip.nama as nama_penitip',
+                    'barang.nama as nama_barang',
+                    'pembelian.tanggal_lunas',
+                    'barang.harga as harga',
+                    'barang.foto as foto_barang',
+                    'barang.status_barang as status_barang',
+
                 )
                 ->get();
-                
-                return response()->json([
-                    'message' => 'Data retrieved successfully',
-                    'data' => $data,
-                ]);
-            }catch(Exception $e){
-                return response()->json([
-                    'message' => 'Failed to retrieve data',
-                    'error' => $e->getMessage(),
-                ], 500);
-            }
+
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'data' => $data,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function fetchHistoryTransaksiById($id_barang){
-        try{
+    public function fetchHistoryTransaksiById($id_barang)
+    {
+        try {
             $penitip = Auth::guard('penitip')->user();
             $data = DB::table('pembelian')
-            ->join('keranjang', 'pembelian.id_keranjang', '=', 'keranjang.id_keranjang')
-            ->join('detail_keranjang', 'keranjang.id_keranjang', '=', 'detail_keranjang.id_keranjang')
-            ->join('barang', 'detail_keranjang.id_barang', '=', 'barang.id_barang')
-            ->join('komisi', 'barang.id_barang', '=', 'komisi.id_barang')
-            ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
-            ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
-            ->where('penitip.id_penitip', $penitip->id_penitip)
-            ->where('barang.id_barang', $id_barang)
-            ->select(
-                'barang.id_barang as id_barang',
-                'penitip.nama as nama_penitip',
-                'barang.nama as nama_barang',
-                'pembelian.tanggal_lunas',
-                'barang.harga as harga',
-                'barang.foto as foto_barang',
-                'barang.status_barang as status_barang',
-                'barang.deskripsi',
-                'barang.status_barang'
+                ->join('keranjang', 'pembelian.id_keranjang', '=', 'keranjang.id_keranjang')
+                ->join('detail_keranjang', 'keranjang.id_keranjang', '=', 'detail_keranjang.id_keranjang')
+                ->join('barang', 'detail_keranjang.id_barang', '=', 'barang.id_barang')
+                ->join('komisi', 'barang.id_barang', '=', 'komisi.id_barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->where('penitip.id_penitip', $penitip->id_penitip)
+                ->where('barang.id_barang', $id_barang)
+                ->select(
+                    'barang.id_barang as id_barang',
+                    'penitip.nama as nama_penitip',
+                    'barang.nama as nama_barang',
+                    'pembelian.tanggal_lunas',
+                    'barang.harga as harga',
+                    'barang.foto as foto_barang',
+                    'barang.status_barang as status_barang',
+                    'barang.deskripsi',
+                    'barang.status_barang'
                 )
                 ->get();
 
-                return response()->json([
-                    'message' => 'Data retrieved successfully',
-                    'data' => $data,
-                ]);
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'data' => $data,
+            ]);
 
 
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to retrieve data',
                 'error' => $e->getMessage(),
