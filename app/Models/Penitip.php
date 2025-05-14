@@ -25,15 +25,16 @@ class Penitip extends Authenticatable
         'wallet',
         'poin',
         'foto_ktp',
-        'nomor_ktp',
+        'no_ktp',
         'badges',
         'total_rating',
     ];
 
-    public function getRoleAttribute() {
+    public function getRoleAttribute()
+    {
         return 'Penitip';
     }
-    
+
     public function penitipKomisi(): HasMany
     {
         return $this->hasMany(Komisi::class, 'id_penitip');
