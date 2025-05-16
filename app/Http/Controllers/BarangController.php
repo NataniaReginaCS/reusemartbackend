@@ -191,13 +191,10 @@ class BarangController extends Controller
             ->where('status_barang', 'tersedia')
             ->get();
 
-
-        if ($barangs->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No items available for purchase'
-            ], 404);
-        }
+        $barangs = $barangs->map(function ($barang) {
+            $barang->foto = asset($barang->foto);
+            return $barang;
+        });
 
         return response()->json([
             'status' => true,
@@ -212,12 +209,11 @@ class BarangController extends Controller
             ->where('status_barang', 'tersedia')
             ->get();
 
-        if ($barangs->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No items available for purchase'
-            ], 404);
-        }
+            $barangs = $barangs->map(function ($barang) {
+                $barang->foto = asset($barang->foto);
+                return $barang;
+            });
+    
 
         return response()->json([
             'status' => true,
@@ -268,13 +264,10 @@ class BarangController extends Controller
             ->get();
         }
 
-        if ($barang->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Barang not found',
-                'data' => []
-            ], 200);
-        }
+        $barang = $barang->map(function ($barang) {
+            $barang->foto = asset($barang->foto);
+            return $barang;
+        });
 
         return response()->json([
             'status' => true,
