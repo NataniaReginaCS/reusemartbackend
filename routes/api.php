@@ -13,7 +13,7 @@ use App\Http\Controllers\PenitipController;
 use App\Http\Controllers\OrganisasiController;
 use App\Http\Controllers\AlamatController;
 use App\Http\Controllers\PembelianController;
-
+use App\Http\Controllers\KeranjangController;
 
 use App\Http\Middleware\OwnerMiddleware;
 use App\Http\Middleware\PenitipMiddleware;
@@ -28,6 +28,7 @@ use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\DiskusiController;
 use App\Http\Controllers\Detail_donasiController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TransaksiPembelianController;
 
 
 
@@ -72,6 +73,14 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::post('/editAlamat/{id}', [AlamatController::class, 'updateAlamat']);
     Route::delete('/deleteAlamat/{id}', [AlamatController::class, 'deleteAlamat']);
     Route::post('/setUtama/{id}', [AlamatController::class, 'setUtama']);
+
+    //Keranjang 
+    Route::post('/addToKeranjang/{id}', [KeranjangController::class, 'addToKeranjang']);
+    Route::get('/fetchKeranjang', [KeranjangController::class, 'fetchKeranjang']);
+    Route::delete('/deleteKeranjang/{id}', [KeranjangController::class, 'deleteKeranjang']);
+    Route::post('/checkout', [TransaksiPembelianController::class, 'checkout']);
+
+  
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {

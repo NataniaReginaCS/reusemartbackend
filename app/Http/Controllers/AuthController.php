@@ -61,9 +61,7 @@ class AuthController extends Controller
                 'foto' => $fotoPath,
             ]);
 
-            $keranjang = Keranjang::create([
-                'id_pembeli' => $pembeli->id_pembeli,
-            ]);
+        
 
             return response()->json([
                 'pembeli' => $pembeli,

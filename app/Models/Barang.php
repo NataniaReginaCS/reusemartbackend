@@ -51,6 +51,12 @@ class Barang extends Model
     {
         return $this->hasMany(Detail_keranjang::class, 'id_barang');
     }
+
+    public function penitip(): BelongsTo
+    {
+        return $this->barangPenitipan->penitipanPenitip();
+    }
+
     // Barang.php
     public function getFotoUrlAttribute()
     {

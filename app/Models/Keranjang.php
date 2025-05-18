@@ -17,6 +17,7 @@ class Keranjang extends Model
 
     protected $fillable = [
         'id_pembeli',
+        'id_barang',
     ];
 
     public function pembeli(): BelongsTo
@@ -30,5 +31,10 @@ class Keranjang extends Model
     public function pembelian(): HasMany
     {
         return $this->hasMany(Pembelian::class, 'id_keranjang');
+    }
+
+    public function barang(): BelongsTo
+    {
+        return $this->belongsTo(Barang::class, 'id_barang');
     }
 }

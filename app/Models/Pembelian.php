@@ -16,13 +16,14 @@ class Pembelian extends Model
     protected $primaryKey = 'id_pembelian';
 
     protected $fillable = [
-        'id_keranjang',
         'id_pegawai',
+        'id_alamat',
         'tanggal_laku',
         'tanggal_lunas',
         'tanggal_pengiriman',
         'ongkir',
         'status_pengiriman',
+        'status_pembayaran',
         'bukti_pembayaran',
         'poin_digunakan',
         'poin_didapat',
