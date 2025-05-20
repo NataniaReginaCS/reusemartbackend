@@ -29,6 +29,7 @@ use App\Http\Controllers\DiskusiController;
 use App\Http\Controllers\Detail_donasiController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TransaksiPembelianController;
+use App\Http\Controllers\PenitipanController;
 
 
 
@@ -61,6 +62,7 @@ Route::get('/showBarangIsNotGaransi', [BarangController::class, 'showBarangIsNot
 Route::get('/showNamaPenitip/{id}', [BarangController::class, 'showNamaPenitip']);
 Route::get('/fetchDiskusi/{idBarang}', [DiskusiController::class, 'fetchDiskusi']);
 Route::get('/fetchRoles', [RoleController::class, 'fetchRoles']);
+Route::get('/getPenitip/{id}', [BarangController::class, 'getPenitip']);
 
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
@@ -103,7 +105,7 @@ Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function
         Route::put('/{id}', [Request_donasiController::class, 'update']);
         Route::put('/{id}/alokasi', [Request_donasiController::class, 'alokasi']);
         Route::delete('/{id}', [Request_donasiController::class, 'destroy']);
-
+        
         Route::get('/search', [Request_donasiController::class, 'search']);
         Route::get('/filterByDate', [Request_donasiController::class, 'filterByDate']);
         Route::get('/filterByStatus', [Request_donasiController::class, 'filterByStatus']);
@@ -133,12 +135,25 @@ Route::middleware('auth:sanctum')->get('/order-details/{id}', [PembelianControll
 Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
 
 Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
-
+    
 });
 
 Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
-Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 
+//Gudang
+Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
+    Route::get('/fetchPenitipan', [PenitipanController::class, 'index']);
+    Route::post('/addPenitipan', [PenitipanController::class, 'store']);
+    Route::post('/updatePenitipan/{id}', [PenitipanController::class, 'update']);
+    Route::get('/showPenitipan/{id}', [PenitipanController::class, 'show']);
+    Route::get('/showPenitip/{id}', [PenitipanController::class, 'showPenitip']);
+    Route::get('/showPegawai/{id}', [PenitipanController::class, 'showPegawai']);
+    Route::get('/showBarang/{id}', [PenitipanController::class, 'showBarang']);
+    Route::get('/showAllBarang', [PenitipanController::class, 'showAllBarang']);
+    Route::get('/fetchPenitipPenitipan', [PenitipanController::class, 'fetchPenitipPenitipan']);
+    Route::get('/fetchPegawaiPenitipan', [PenitipanController::class, 'fetchPegawaiPenitipan']);
+    Route::post('/updateOnlyPenitipan/{id}', [PenitipanController::class, 'updatePenitipan']);
+    Route::post('/storeBarang/{id}', [PenitipanController::class, 'storeBarang']);
 });
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
