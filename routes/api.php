@@ -80,7 +80,13 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::delete('/deleteKeranjang/{id}', [KeranjangController::class, 'deleteKeranjang']);
     Route::post('/checkout', [TransaksiPembelianController::class, 'checkout']);
 
-  
+
+    //Checkout
+    Route::get('/getOngoingPembelian/{nomor_nota}', [TransaksiPembelianController::class, 'getOngoingPembelian']);
+    Route::post('/addBuktiPembayaran/{nomor_nota}', [TransaksiPembelianController::class, 'addBuktiPembayaran']);
+    
+    
+
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
@@ -111,6 +117,9 @@ Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
     Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
     Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
     Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
+
+    //Verifikasi
+    Route::get('/getUnverifiedPayment', [TransaksiPembelianController::class, 'getUnverifiedPayment']);
 });
 
 Route::middleware('auth:sanctum')->get('/order-history', [PembelianController::class, 'getOrderHistory']);

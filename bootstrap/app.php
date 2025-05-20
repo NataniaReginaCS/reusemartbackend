@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withSchedule(function ($schedule) {
-        $schedule->command(BatalkanPembelianTerlambat::class)->everyMinute();
+        $schedule->command('pembelian:batalkan-expired')->everyMinute();
     })
     ->withMiddleware(function (Middleware $middleware) {
         //

@@ -190,9 +190,6 @@ class AuthController extends Controller
                 'role' => $user->role,
             ], 200);    
         }
-        return response()->json([
-            'message' => 'Unauthorized',
-        ], 401);
     }
 }
 
