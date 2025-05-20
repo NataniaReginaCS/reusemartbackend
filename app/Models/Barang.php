@@ -30,6 +30,7 @@ class Barang extends Model
         'batas_ambil',
         'status_barang',
         'tanggal_ambil',
+        'durasi_penitipan',
     ];
 
     public function barangPenitipan(): BelongsTo
@@ -51,6 +52,12 @@ class Barang extends Model
     {
         return $this->hasMany(Detail_keranjang::class, 'id_barang');
     }
+
+    public function penitip(): BelongsTo
+    {
+        return $this->barangPenitipan->penitipanPenitip();
+    }
+
     // Barang.php
     public function getFotoUrlAttribute()
     {

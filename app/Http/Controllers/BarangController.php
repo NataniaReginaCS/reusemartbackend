@@ -320,4 +320,30 @@ class BarangController extends Controller
         return response()->json($query->get());
     }
 
+    public function getPenitip($id)
+    {
+        try{
+            $barang = Barang::find($id);
+            if (!$barang) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Barang not found'
+                ], 404);
+            }
+            $penitip = $barang->penitip;
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data Penitip',
+                'data' => $penitip
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve penitip data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }
