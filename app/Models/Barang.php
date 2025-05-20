@@ -30,6 +30,7 @@ class Barang extends Model
         'batas_ambil',
         'status_barang',
         'tanggal_ambil',
+        'durasi_penitipan',
     ];
 
     public function barangPenitipan(): BelongsTo
