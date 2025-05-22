@@ -126,6 +126,15 @@ class TransaksiPembelianController extends Controller
         if (!$pembelian) {
             return response()->json(['message' => 'Pembelian tidak ditemukan'], 404);
         }
+
+        $detailPembelian = Detail_pembelian::where('id_pembelian', $pembelian->id_pembelian)->get();
+        foreach ($detailPembelian as $item) {
+            $barang = Barang::find($item->id_barang);
+            if ($barang) {
+            $barang->status_barang = 'sold out';
+            $barang->save();
+            }
+        }
         
         if ($request->hasFile('bukti_pembayaran')) {
             $file = $request->file('bukti_pembayaran');
@@ -155,13 +164,81 @@ class TransaksiPembelianController extends Controller
             if ($pembelian->isEmpty()) {
                 return response()->json(['message' => 'Tidak ada pembelian yang belum diverifikasi'], 404);
             }
-            $pembelian->asset($pembelian->bukti_pembayaran);
+    
+            $pembelian = $pembelian->map(function ($item) {
+                // Assuming bukti_pembayaran stores the filename or a path like "images/bukti_pembayaran/filename.png"
+                $item->bukti_pembayaran = $item->bukti_pembayaran 
+                    ? asset('storage/images/bukti_pembayaran/' . basename($item->bukti_pembayaran)) 
+                    : null;
+                return $item;
+            });
+
             return response()->json([
+                'message' => 'Berhasil mendapatkan pembelian',
                 'pembelian' => $pembelian,
             ]);
         }catch(\Exception $e){
             return response()->json([
                 'message' => 'Gagal mendapatkan pembelian',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function verifyPayment($nomor_nota){
+        try{
+            $pembelian = Pembelian::where('nomor_nota', $nomor_nota)->first();
+            if (!$pembelian) {
+                return response()->json(['message' => 'Pembelian tidak ditemukan'], 404);
+            }
+            
+            
+            $pembelian->status_pembayaran = 'lunas';
+            $pembelian->status_pengiriman = 'disiapkan';
+            $pembelian->save();
+
+            return response()->json(['message' => 'Pembayaran berhasil diverifikasi'], 200);
+            
+        }catch(\Exception $e){
+            return response()->json([
+                'message' => 'Gagal memverifikasi pembayaran',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function declinePayment($nomor_nota){
+        try{
+            $pembelian = Pembelian::where('nomor_nota', $nomor_nota)->first();
+            if (!$pembelian) {
+                return response()->json(['message' => 'Pembelian tidak ditemukan'], 404);
+            }
+            
+            
+            $pembeli = Pembeli::find($pembelian->id_pembeli);
+            $pembeli->poin += $pembelian->poin_digunakan;
+            $pembeli->save();
+            
+            $detailPembelian = Detail_pembelian::where('id_pembelian', $pembelian->id_pembelian)->get();
+            foreach ($detailPembelian as $item) {
+                $barang = Barang::find($item->id_barang);
+                if ($barang) {
+                $barang->status_barang = 'tersedia';
+                $barang->save();
+                }
+            }
+        
+            if ($pembelian->bukti_pembayaran) {
+                Storage::disk('public')->delete($pembelian->bukti_pembayaran);
+            }
+            
+            $pembelian->status_pembayaran = 'batal';
+            $pembelian->save();
+            
+            return response()->json(['message' => 'Pembayaran berhasil ditolak'], 200);
+        }catch(\Exception $e){
+            return response()->json([
+                'message' => 'Gagal menolak pembayaran',
                 'error' => $e->getMessage(),
             ], 500);
         }
