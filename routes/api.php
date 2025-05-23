@@ -47,6 +47,9 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 //Public
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/loginMobile', [AuthController::class, 'loginMobile']);
+
+
 Route::post('/registerPembeli', [AuthController::class, 'registerPembeli']);
 Route::post('/registerOrganisasi', [AuthController::class, 'registerOrganisasi']);
 Route::get('/fetchKategori', [KategoriController::class, 'fetchKategori']);
@@ -82,8 +85,14 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::get('/fetchKeranjang', [KeranjangController::class, 'fetchKeranjang']);
     Route::delete('/deleteKeranjang/{id}', [KeranjangController::class, 'deleteKeranjang']);
     Route::post('/checkout', [TransaksiPembelianController::class, 'checkout']);
+
+
+    //Checkout
+    Route::get('/getOngoingPembelian/{nomor_nota}', [TransaksiPembelianController::class, 'getOngoingPembelian']);
+    Route::post('/addBuktiPembayaran/{nomor_nota}', [TransaksiPembelianController::class, 'addBuktiPembayaran']);
     
-    
+        
+  
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
@@ -115,6 +124,11 @@ Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
     Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
     Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
     Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
+
+    //Verifikasi
+    Route::get('/getUnverifiedPayment', [TransaksiPembelianController::class, 'getUnverifiedPayment']);
+    Route::post('/verifyPayment/{nomor_nota}', [TransaksiPembelianController::class, 'verifyPayment']);
+    Route::post('/declinePayment/{nomor_nota}', [TransaksiPembelianController::class, 'declinePayment']);
 });
 
 Route::middleware('auth:sanctum')->get('/order-history', [PembelianController::class, 'getOrderHistory']);
@@ -131,7 +145,6 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
     
 });
 
-Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
 
 //Gudang
 Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
@@ -141,7 +154,7 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
     Route::get('/showPenitipan/{id}', [PenitipanController::class, 'show']);
     Route::get('/showPenitip/{id}', [PenitipanController::class, 'showPenitip']);
     Route::get('/showPegawai/{id}', [PenitipanController::class, 'showPegawai']);
-    Route::get('/showBarang/{id}', [PenitipanController::class, 'showBarang']);
+    // Route::get('/showBarang/{id}', [PenitipanController::class, 'showBarang']);
     Route::get('/showAllBarang', [PenitipanController::class, 'showAllBarang']);
     Route::get('/fetchPenitipPenitipan', [PenitipanController::class, 'fetchPenitipPenitipan']);
     Route::get('/fetchPegawaiPenitipan', [PenitipanController::class, 'fetchPegawaiPenitipan']);

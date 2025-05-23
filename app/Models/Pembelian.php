@@ -18,6 +18,7 @@ class Pembelian extends Model
     protected $fillable = [
         'id_pegawai',
         'id_alamat',
+        'id_pembeli',
         'tanggal_laku',
         'tanggal_lunas',
         'tanggal_pengiriman',
@@ -40,6 +41,14 @@ class Pembelian extends Model
     public function pegawai(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'id_pegawai');
+    }
+    public function alamat(): BelongsTo
+    {
+        return $this->belongsTo(Alamat::class, 'id_alamat');
+    }
+    public function pembeli(): BelongsTo
+    {
+        return $this->belongsTo(Pembeli::class, 'id_pembeli');
     }
 }
 
