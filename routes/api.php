@@ -30,15 +30,13 @@ use App\Http\Controllers\Detail_donasiController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TransaksiPembelianController;
 use App\Http\Controllers\PenitipanController;
-
-
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
+use App\Http\Controllers\Api\NotificationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
-
-
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/cekRole', [AuthController::class, 'cekRole']);
@@ -64,6 +62,9 @@ Route::get('/fetchDiskusi/{idBarang}', [DiskusiController::class, 'fetchDiskusi'
 Route::get('/fetchRoles', [RoleController::class, 'fetchRoles']);
 Route::get('/getPenitip/{id}', [BarangController::class, 'getPenitip']);
 
+Route::post('/send-notification', [NotificationController::class, 'send']);
+Route::post('/update-fcm-token', [NotificationController::class, 'updateFcmToken']);
+Route::post('/send-welcome-notification', [NotificationController::class, 'sendWelcomeNotification'])->middleware('auth:sanctum');
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
     Route::get('/fetchAlamat', [AlamatController::class, 'fetchAlamat']);
@@ -75,20 +76,21 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::post('/editAlamat/{id}', [AlamatController::class, 'updateAlamat']);
     Route::delete('/deleteAlamat/{id}', [AlamatController::class, 'deleteAlamat']);
     Route::post('/setUtama/{id}', [AlamatController::class, 'setUtama']);
-
+    
     //Keranjang 
     Route::post('/addToKeranjang/{id}', [KeranjangController::class, 'addToKeranjang']);
     Route::get('/fetchKeranjang', [KeranjangController::class, 'fetchKeranjang']);
     Route::delete('/deleteKeranjang/{id}', [KeranjangController::class, 'deleteKeranjang']);
     Route::post('/checkout', [TransaksiPembelianController::class, 'checkout']);
-
-  
+    
+    
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
     Route::get('/fetchPenitipByLogin', [PenitipController::class, 'fetchPenitipByLogin']);
     Route::get('/fetchHistoryTransaksi', [PenitipController::class, 'fetchHistoryTransaksi']);
     Route::get('/fetchHistoryTransaksiById/{id}', [PenitipController::class, 'fetchHistoryTransaksiById']);
+    Route::post('/save-token', [PenitipController::class, 'saveFcmToken']);
 });
 
 Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function () {

@@ -28,6 +28,7 @@ class Penitip extends Authenticatable
         'no_ktp',
         'badges',
         'total_rating',
+        'fcm_token',
     ];
 
     public function getRoleAttribute()
