@@ -21,9 +21,13 @@ class BatalkanPembelianTerlambat extends Command
 
         foreach ($pembelians as $pembelian) {
             $pembelian->status_pembayaran = 'batal';
+            $pembeli = Pembeli::where('id_pembeli', $pembelian->id_pembeli)->first();
+            if ($pembeli) {
+                $pembeli->poin += $pembelian->poin_digunakan;
+                $pembeli->save();
+            }
             $pembelian->save();
 
-            // Jika perlu, kembalikan stok barang di sini
         }
 
         $this->info('Pembelian kedaluwarsa berhasil dibatalkan.');
