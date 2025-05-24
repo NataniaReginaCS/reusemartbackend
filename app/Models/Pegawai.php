@@ -25,6 +25,7 @@ class Pegawai extends Authenticatable
         'tanggal_masuk',
         'tanggal_lahir',
         'wallet',
+        'fcm_token',
     ];
 
     public function getRoleAttribute() {

@@ -92,7 +92,7 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::post('/addBuktiPembayaran/{nomor_nota}', [TransaksiPembelianController::class, 'addBuktiPembayaran']);
     
         
-  
+
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
