@@ -41,6 +41,9 @@ Route::get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/cekRole', [AuthController::class, 'cekRole']);
+Route::middleware('auth:sanctum')->post('/send-notification', [NotificationController::class, 'send']);
+Route::middleware('auth:sanctum')->post('/update-fcm-token', [NotificationController::class, 'updateFcmToken']);
+Route::post('/send-welcome-notification', [NotificationController::class, 'sendWelcomeNotification'])->middleware('auth:sanctum');
 
 //Link Email 
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
@@ -65,10 +68,6 @@ Route::get('/showNamaPenitip/{id}', [BarangController::class, 'showNamaPenitip']
 Route::get('/fetchDiskusi/{idBarang}', [DiskusiController::class, 'fetchDiskusi']);
 Route::get('/fetchRoles', [RoleController::class, 'fetchRoles']);
 Route::get('/getPenitip/{id}', [BarangController::class, 'getPenitip']);
-
-Route::post('/send-notification', [NotificationController::class, 'send']);
-Route::post('/update-fcm-token', [NotificationController::class, 'updateFcmToken']);
-Route::post('/send-welcome-notification', [NotificationController::class, 'sendWelcomeNotification'])->middleware('auth:sanctum');
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
     Route::get('/fetchAlamat', [AlamatController::class, 'fetchAlamat']);

@@ -81,6 +81,6 @@ class RatingController extends Controller
             return response()->json(['message' => 'No ratings found'], 404);
         }
 
-        return response()->json(['ratings' => $rating], 200);
+        return response()->json(['data' => $rating], 200);
     }
 }
