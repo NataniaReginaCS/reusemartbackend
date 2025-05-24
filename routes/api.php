@@ -78,6 +78,11 @@ Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function ()
     Route::get('/fetchPenitipByLogin', [PenitipController::class, 'fetchPenitipByLogin']);
     Route::get('/fetchHistoryTransaksi', [PenitipController::class, 'fetchHistoryTransaksi']);
     Route::get('/fetchHistoryTransaksiById/{id}', [PenitipController::class, 'fetchHistoryTransaksiById']);
+    Route::get('/fetchBarangbyPenitip', [PenitipController::class, 'fetchBarangbyPenitip']);
+    Route::get('/fetchBarangPenitipById/{id}', [PenitipController::class, 'fetchBarangPenitipById']);
+    Route::post('/showExtendProduct/{id}', [PenitipController::class, 'showExtendProducts   ']);
+    Route::post('/extendBarangPenitip', [PenitipController::class, 'extendBarangPenitip']);
+    Route::post('/ambilBarangPenitip', [PenitipController::class, 'ambilBarangPenitip']);
 });
 
 Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function () {
@@ -117,12 +122,16 @@ Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
 Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 
     Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
+    Route::get('/fetchTransaksiByGudang', [PegawaiController::class, 'fetchTransaksiByGudang']);
+    Route::get('/fetchTransaksiGudangById/{id}', [PegawaiController::class, 'fetchTransaksiGudangById']);
+    Route::put('/updateTanggalPengiriman/{id}', [PegawaiController::class, 'update']);
+    Route::get('/fetchDataPembelian/{id}', [PegawaiController::class, 'fetchDataPembelian']);
+    Route::get('/fetchDataPegawai', [PegawaiController::class, 'fetchDataPegawai']);
+
 });
 
 Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
-Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
 
-});
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 

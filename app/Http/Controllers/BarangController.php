@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Barang;
+use App\Models\Penitipan;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
@@ -12,7 +13,7 @@ class BarangController extends Controller
 {
     public function index()
     {
-        try{
+        try {
             $barangs = Barang::where('status_barang', 'tersedia')->get();
             $barangs = $barangs->map(function ($barang) {
                 $barang->foto = asset($barang->foto);
@@ -50,6 +51,7 @@ class BarangController extends Controller
             ], 404);
         }
     }
+
 
     public function store(Request $request)
     {
@@ -170,8 +172,8 @@ class BarangController extends Controller
             ], 400);
         }
         $barangs = Barang::where('nama', 'LIKE', "%$query%")
-        ->where('status_barang', 'tersedia')
-        ->get();
+            ->where('status_barang', 'tersedia')
+            ->get();
 
         $barangs = $barangs->map(function ($barang) {
             $barang->foto = asset($barang->foto);
@@ -228,12 +230,12 @@ class BarangController extends Controller
 
     public function relatedProducts($id_kategori)
     {
-        if((int)$id_kategori <= 10){
+        if ((int) $id_kategori <= 10) {
             $barang = Barang::where('id_kategori', '<', 10)->get();
-        }else{
+        } else {
             $barang = Barang::where('id_kategori', 'like', "$id_kategori%")
-            ->where('id_kategori', '>', 10)
-            ->get();
+                ->where('id_kategori', '>', 10)
+                ->get();
         }
 
         $barang = $barang->where('status_barang', 'tersedia');
@@ -257,15 +259,15 @@ class BarangController extends Controller
 
     public function showBarangbyKategori($id_kategori)
     {
-        if($id_kategori === '0' ){
+        if ($id_kategori === '0') {
             $barang = Barang::where('id_kategori', '<', 10)
-            ->where('status_barang', 'tersedia')
-            ->get();
-        }else{
+                ->where('status_barang', 'tersedia')
+                ->get();
+        } else {
             $barang = Barang::where('id_kategori', 'like', "$id_kategori%")
-            ->where('id_kategori', '>', 10)
-            ->where('status_barang', 'tersedia')
-            ->get();
+                ->where('id_kategori', '>', 10)
+                ->where('status_barang', 'tersedia')
+                ->get();
         }
 
         if ($barang->isEmpty()) {
@@ -283,8 +285,9 @@ class BarangController extends Controller
         ]);
     }
 
-    public function cekBarangGaransibyTanggalGaransi($id_barang){
-        try{
+    public function cekBarangGaransibyTanggalGaransi($id_barang)
+    {
+        try {
             $barang = Barang::find($id_barang);
             if (!$barang) {
                 return response()->json([
