@@ -58,14 +58,15 @@ class NotificationController extends Controller
         try {
             $request->validate([
                 'id' => 'required|integer',
+                'user_type' => 'required|string|in:Pembeli,Penitip,Kurir,Hunter',
                 'fcm_token' => 'required|string',
-                'user_type' => 'required|string|in:pembeli,penitip,pegawai',
             ]);
 
             $userTypes = [
-                'pembeli' => Pembeli::class,
-                'penitip' => Penitip::class,
-                'pegawai' => Pegawai::class,
+                'Pembeli' => Pembeli::class,
+                'Penitip' => Penitip::class,
+                'Kurir' => Pegawai::class,
+                'Hunter' => Pegawai::class,
             ];
 
             $model = $userTypes[$request->user_type];
