@@ -81,7 +81,7 @@ class PembeliController extends Controller
             return response()->json([
                 'alamatUtama' => $alamatUtama,
                 'message' => 'Alamat utama berhasil ditemukan',
-            ], 200, [], JSON_UNESCAPED_SLASHES);
+            ], 200);
     
         } catch (\Exception $e) {
             return response()->json([

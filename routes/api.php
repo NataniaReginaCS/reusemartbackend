@@ -33,6 +33,7 @@ use App\Http\Controllers\PenitipanController;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\RatingController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -91,7 +92,10 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::get('/getOngoingPembelian/{nomor_nota}', [TransaksiPembelianController::class, 'getOngoingPembelian']);
     Route::post('/addBuktiPembayaran/{nomor_nota}', [TransaksiPembelianController::class, 'addBuktiPembayaran']);
     
-        
+    //Rating
+    Route::post('/createRating', [RatingController::class, 'createRating']);
+    Route::get('/getRating/{id_barang}', [RatingController::class, 'getRating']);
+    Route::get('/fetchRating', [RatingController::class, 'fetchRating']);
   
 });
 
@@ -152,9 +156,9 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
     Route::post('/addPenitipan', [PenitipanController::class, 'store']);
     Route::post('/updatePenitipan/{id}', [PenitipanController::class, 'update']);
     Route::get('/showPenitipan/{id}', [PenitipanController::class, 'show']);
-    Route::get('/showPenitip/{id}', [PenitipanController::class, 'showPenitip']);
-    Route::get('/showPegawai/{id}', [PenitipanController::class, 'showPegawai']);
-    // Route::get('/showBarang/{id}', [PenitipanController::class, 'showBarang']);
+    Route::get('/showPenitipPenitipan/{id}', [PenitipanController::class, 'showPenitip']);
+    Route::get('/showPegawaiPenitipan/{id}', [PenitipanController::class, 'showPegawai']);
+    Route::get('/showBarangPenitipan/{id}', [PenitipanController::class, 'showBarang']);
     Route::get('/showAllBarang', [PenitipanController::class, 'showAllBarang']);
     Route::get('/fetchPenitipPenitipan', [PenitipanController::class, 'fetchPenitipPenitipan']);
     Route::get('/fetchPegawaiPenitipan', [PenitipanController::class, 'fetchPegawaiPenitipan']);

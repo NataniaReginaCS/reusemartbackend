@@ -15,7 +15,7 @@ class BarangController extends Controller
         try{
             $barangs = Barang::where('status_barang', 'tersedia')->get();
             $barangs = $barangs->map(function ($barang) {
-                $barang->foto = asset($barang->foto);
+                $barang->foto = asset('storage/' . $barang->foto);
                 return $barang;
             });
             return response()->json([
@@ -35,7 +35,7 @@ class BarangController extends Controller
     public function show($id)
     {
         $barang = Barang::find($id);
-        $barang->foto = asset($barang->foto);
+        $barang->foto = asset('storage/' . $barang->foto);
 
         if ($barang) {
             return response()->json([
@@ -192,7 +192,7 @@ class BarangController extends Controller
             ->get();
 
         $barangs = $barangs->map(function ($barang) {
-            $barang->foto = asset($barang->foto);
+            $barang->foto = asset('storage/' . $barang->foto);
             return $barang;
         });
 
@@ -210,7 +210,7 @@ class BarangController extends Controller
             ->get();
 
             $barangs = $barangs->map(function ($barang) {
-                $barang->foto = asset($barang->foto);
+                $barang->foto = asset('storage/' . $barang->foto);
                 return $barang;
             });
     
@@ -234,7 +234,7 @@ class BarangController extends Controller
 
         $barang = $barang->where('status_barang', 'tersedia');
         $barang = $barang->map(function ($barang) {
-            $barang->foto = asset($barang->foto);
+            $barang->foto = asset('storage/' . $barang->foto);
             return $barang;
         });
         if ($barang->isEmpty()) {
@@ -265,7 +265,7 @@ class BarangController extends Controller
         }
 
         $barang = $barang->map(function ($barang) {
-            $barang->foto = asset($barang->foto);
+            $barang->foto = asset('storage/' . $barang->foto);
             return $barang;
         });
 
