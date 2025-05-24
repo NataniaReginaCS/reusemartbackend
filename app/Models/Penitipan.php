@@ -22,7 +22,7 @@ class Penitipan extends Model
 
     public function penitipanPegawai(): BelongsTo
     {
-        return $this->belongsTo(Pegawai::class, 'id_penitip');
+        return $this->belongsTo(Pegawai::class, 'id_pegawai');
     }
 
     public function penitipanPenitip(): BelongsTo

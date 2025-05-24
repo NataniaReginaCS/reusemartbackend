@@ -16,7 +16,7 @@ class BarangController extends Controller
         try {
             $barangs = Barang::where('status_barang', 'tersedia')->get();
             $barangs = $barangs->map(function ($barang) {
-                $barang->foto = asset($barang->foto);
+                $barang->foto = asset('storage/' . $barang->foto);
                 return $barang;
             });
             return response()->json([
@@ -36,7 +36,7 @@ class BarangController extends Controller
     public function show($id)
     {
         $barang = Barang::find($id);
-        $barang->foto = asset($barang->foto);
+        $barang->foto = asset('storage/' . $barang->foto);
 
         if ($barang) {
             return response()->json([
@@ -193,13 +193,10 @@ class BarangController extends Controller
             ->where('status_barang', 'tersedia')
             ->get();
 
-
-        if ($barangs->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No items available for purchase'
-            ], 404);
-        }
+        $barangs = $barangs->map(function ($barang) {
+            $barang->foto = asset('storage/' . $barang->foto);
+            return $barang;
+        });
 
         return response()->json([
             'status' => true,
@@ -214,12 +211,11 @@ class BarangController extends Controller
             ->where('status_barang', 'tersedia')
             ->get();
 
-        if ($barangs->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No items available for purchase'
-            ], 404);
-        }
+            $barangs = $barangs->map(function ($barang) {
+                $barang->foto = asset('storage/' . $barang->foto);
+                return $barang;
+            });
+    
 
         return response()->json([
             'status' => true,
@@ -240,7 +236,7 @@ class BarangController extends Controller
 
         $barang = $barang->where('status_barang', 'tersedia');
         $barang = $barang->map(function ($barang) {
-            $barang->foto = asset($barang->foto);
+            $barang->foto = asset('storage/' . $barang->foto);
             return $barang;
         });
         if ($barang->isEmpty()) {
@@ -270,13 +266,10 @@ class BarangController extends Controller
                 ->get();
         }
 
-        if ($barang->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Barang not found',
-                'data' => []
-            ], 200);
-        }
+        $barang = $barang->map(function ($barang) {
+            $barang->foto = asset('storage/' . $barang->foto);
+            return $barang;
+        });
 
         return response()->json([
             'status' => true,
@@ -328,6 +321,32 @@ class BarangController extends Controller
         $query->where('status_barang', 'tersedia');
         $query->orderBy('harga', 'asc');
         return response()->json($query->get());
+    }
+
+    public function getPenitip($id)
+    {
+        try{
+            $barang = Barang::find($id);
+            if (!$barang) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Barang not found'
+                ], 404);
+            }
+            $penitip = $barang->penitip;
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data Penitip',
+                'data' => $penitip
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve penitip data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 }

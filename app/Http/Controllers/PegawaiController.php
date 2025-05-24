@@ -139,28 +139,20 @@ class PegawaiController extends Controller
                 $validatedData['password'] = $pegawai->password;
             }
 
-            $cekEmail = Pegawai::where('email', $request->email)->where('id_pegawai', '!=', $pegawaiId)->exists();
-            if ($cekEmail) {
+
+                return response()->json([
+                    "status" => true,
+                    "message" => "Pegawai updated successfully",
+                    "data" => $pegawai
+                ], 200);
+            } catch (Exception $e) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Email already exists',
-                ], 400);
+                    'message' => 'Pegawai not found',
+                    'error' => $e->getMessage(),
+                ], 404);
             }
-            $pegawai->update($validatedData);
-
-            return response()->json([
-                "status" => true,
-                "message" => "Pegawai updated successfully",
-                "data" => $pegawai
-            ], 200);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Pegawai not found',
-                'error' => $e->getMessage(),
-            ], 404);
         }
-    }
 
     public function deletePegawai($id)
     {

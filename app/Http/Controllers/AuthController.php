@@ -61,9 +61,7 @@ class AuthController extends Controller
                 'foto' => $fotoPath,
             ]);
 
-            $keranjang = Keranjang::create([
-                'id_pembeli' => $pembeli->id_pembeli,
-            ]);
+        
 
             return response()->json([
                 'pembeli' => $pembeli,
@@ -184,6 +182,7 @@ class AuthController extends Controller
         ], 200);
     }
 
+
     public function cekRole(Request $request)
     {
         $user = $request->user();
@@ -192,8 +191,48 @@ class AuthController extends Controller
                 'role' => $user->role,
             ], 200);    
         }
+    }
+
+    public function loginMobile(Request $request)
+    {
+        $userTypes = [
+            'pembeli' => Pembeli::class,
+            'penitip' => Penitip::class,
+            'pegawai' => Pegawai::class,
+        ];
+
+        $request->validate([
+            'email' => 'required|string|email|max:255',
+            'password' => 'required|string',
+        ]);
+
+        foreach ($userTypes as $userType => $model) {
+
+            if($userType === 'pegawai'){
+                $user = $model::where('email', $request->email)
+                ->where(function ($query) {
+                    $query->where('id_role', 3)
+                        ->orWhere('id_role', 4);
+                })->first();
+            }else{
+
+                $user = $model::where('email', $request->email)->first();
+            }
+
+
+            if ($user && Hash::check($request->password, $user->password)) {
+                $role = $user->role;
+                $token = $user->createToken('auth_token')->plainTextToken;
+                return response()->json([
+                    'message' => 'Login successful',
+                    'user' => $user,
+                    'role' => $role,
+                    'token' => $token,
+                ], 200);
+            }
+        }
         return response()->json([
-            'message' => 'Unauthorized',
+            'message' => 'Invalid credentials',
         ], 401);
     }
 }

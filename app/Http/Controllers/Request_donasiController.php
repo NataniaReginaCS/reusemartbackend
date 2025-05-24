@@ -7,6 +7,7 @@ use App\Models\Request_donasi;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class Request_donasiController extends Controller
 {
@@ -50,6 +51,7 @@ class Request_donasiController extends Controller
             // Get the logged-in user's organisasi ID
             $user = auth()->user();
             $validatedData['id_organisasi'] = $user->id_organisasi;
+            $validatedData['tanggal_request'] = Carbon::now();
 
             $request_donasi = Request_donasi::create($validatedData);
 

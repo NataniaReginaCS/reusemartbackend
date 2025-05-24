@@ -16,13 +16,15 @@ class Pembelian extends Model
     protected $primaryKey = 'id_pembelian';
 
     protected $fillable = [
-        'id_keranjang',
         'id_pegawai',
+        'id_alamat',
+        'id_pembeli',
         'tanggal_laku',
         'tanggal_lunas',
         'tanggal_pengiriman',
         'ongkir',
         'status_pengiriman',
+        'status_pembayaran',
         'bukti_pembayaran',
         'poin_digunakan',
         'poin_didapat',
@@ -39,6 +41,14 @@ class Pembelian extends Model
     public function pegawai(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'id_pegawai');
+    }
+    public function alamat(): BelongsTo
+    {
+        return $this->belongsTo(Alamat::class, 'id_alamat');
+    }
+    public function pembeli(): BelongsTo
+    {
+        return $this->belongsTo(Pembeli::class, 'id_pembeli');
     }
 }
 

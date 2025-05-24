@@ -435,5 +435,22 @@ class PenitipController extends Controller
                 'message' => 'Barang dalam masa pengambilan',
             ], 200);
         }
+    public function saveFcmToken(Request $request)
+    {
+        \Log::info('Request data:', $request->all()); // Debugging
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $penitip = Auth::guard('penitip')->user();
+        if ($penitip) {
+            $penitip->fcm_token = $request->fcm_token;
+            $penitip->save();
+            \Log::info('FCM token saved for penitip ID: ' . $penitip->id);
+            return response()->json(['message' => 'FCM token saved']);
+        }
+
+        return response()->json(['message' => 'Penitip not found'], 404);
+
     }
 }
