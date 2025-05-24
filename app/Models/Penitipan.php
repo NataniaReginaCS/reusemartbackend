@@ -32,7 +32,7 @@ class Penitipan extends Model
 
     public function penitipanBarang(): HasMany
     {
-        return $this->hasMany(Barang::class, 'id_penitipan');
+        return $this->hasMany(Barang::class, 'id_barang');
     }
 
 }

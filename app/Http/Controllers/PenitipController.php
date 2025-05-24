@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Penitip;
+use App\Models\Barang;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class PenitipController extends Controller
 {
@@ -225,7 +227,6 @@ class PenitipController extends Controller
 
                 )
                 ->get();
-
             return response()->json([
                 'message' => 'Data retrieved successfully',
                 'data' => $data,
@@ -278,6 +279,162 @@ class PenitipController extends Controller
         }
     }
 
+    public function fetchBarangbyPenitip()
+    {
+        try {
+            $penitip = Auth::guard('penitip')->user();
+            $idPenitip = $penitip->id_penitip;
+
+            $today = Carbon::now()->toDateString();
+
+
+            Barang::whereIn('status_barang', ['Tersedia', 'Belum Diambil'])
+                ->whereDate('tanggal_akhir', '<', $today)
+                ->update(['status_barang' => 'Donasi']);
+
+            $data = DB::table('barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->where('penitip.id_penitip', $idPenitip)
+                ->where('barang.status_barang', '!=', 'Sold Out')
+                ->select(
+                    'barang.id_barang as id_barang',
+                    'barang.nama as nama_barang',
+                    'barang.foto as foto_barang',
+                    'barang.harga as harga',
+                    'barang.status_perpanjangan as status_perpanjangan',
+
+                    'barang.status_barang as status_barang',
+                    'barang.tanggal_akhir as tanggal_akhir',
+                    'barang.batas_ambil as batas_ambil'
+                )
+                ->get();
+
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'data' => $data,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function fetchBarangPenitipById($id_barang)
+    {
+        try {
+            $penitip = auth('penitip')->user();
+            $today = Carbon::now()->toDateString();
+
+
+            Barang::whereIn('status_barang', ['Tersedia', 'Belum Diambil'])
+                ->whereDate('tanggal_akhir', '<', $today)
+                ->update(['status_barang' => 'Belum Diambil']);
+
+            $updatedHangus = Barang::whereNot('status_barang', 'Hangus')
+                ->whereDate('batas_ambil', '<', $today)
+                ->update(['status_barang' => 'Hangus']);
+
+            $data = DB::table('barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->where('penitip.id_penitip', $penitip->id_penitip)
+                ->where('barang.id_barang', $id_barang)
+                ->select(
+                    'barang.id_barang as id_barang',
+                    'barang.nama as nama_barang',
+                    'barang.foto as foto_barang',
+                    'barang.harga as harga',
+                    'barang.status_barang as status_barang',
+                    'barang.status_perpanjangan as status_perpanjangan',
+                    'barang.tanggal_akhir as tanggal_akhir',
+                    'barang.batas_ambil as batas_ambil',
+                    'barang.deskripsi',
+
+                )
+                ->get();
+
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'data' => $data,
+            ]);
+
+
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function extendBarangPenitip(Request $request)
+    {
+        $detailTransaksi = Barang::where('id_barang', $request->id_barang)->first();
+
+        if (!$detailTransaksi) {
+            return response()->json([
+                'message' => 'Detail Transaksi not found',
+            ], 404);
+        }
+
+        // Convert tanggal_akhir to Carbon instance
+        $tanggalAkhir = Carbon::parse($detailTransaksi->tanggal_akhir);
+
+        if ($tanggalAkhir->toDateString() < Carbon::now()->toDateString()) {
+            return response()->json([
+                'message' => 'Barang sudah kadaluarsa',
+            ], 400);
+        }
+
+        // Extend by 30 days
+        $tanggalBerakhirBaru = $tanggalAkhir->copy()->addDays(30);
+        $batasPengambilanBaru = $tanggalBerakhirBaru->copy()->addDays(7);
+
+        $detailTransaksi->update([
+            'tanggal_akhir' => $tanggalBerakhirBaru,
+            'batas_ambil' => $batasPengambilanBaru,
+            'status_perpanjangan' => 1,
+        ]);
+
+        return response()->json([
+            'message' => 'Perpanjangan berhasil',
+        ], 200);
+    }
+
+
+    public function ambilBarangPenitip(Request $request)
+    {
+        $detailTransaksi = Barang::where('id_barang', $request->id_barang)->first();
+
+        if (!$detailTransaksi) {
+            return response()->json([
+                'message' => 'Detail Transaksi not found',
+            ], 404);
+        }
+
+        // Convert tanggal_akhir to Carbon instance 
+        $tanggalAkhir = Carbon::parse($detailTransaksi->tanggal_akhir);
+
+        if ($tanggalAkhir->toDateString() < Carbon::now()->toDateString()) {
+            $detailTransaksi->update([
+                'status_barang' => 'Hangus',
+            ]);
+            return response()->json([
+                'message' => 'Barang Sudah Hangus',
+            ], 200);
+        } else {
+
+            $detailTransaksi->update([
+                'status_barang' => 'Belum Diambil',
+            ]);
+
+            return response()->json([
+                'message' => 'Barang dalam masa pengambilan',
+            ], 200);
+        }
     public function saveFcmToken(Request $request)
     {
         \Log::info('Request data:', $request->all()); // Debugging
@@ -294,5 +451,6 @@ class PenitipController extends Controller
         }
 
         return response()->json(['message' => 'Penitip not found'], 404);
+
     }
 }
