@@ -162,10 +162,6 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
 
 Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
 
-    
-});
-
-
 //Gudang
 Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
     Route::get('/fetchPenitipan', [PenitipanController::class, 'index']);
