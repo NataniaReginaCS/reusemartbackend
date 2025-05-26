@@ -435,6 +435,8 @@ class PenitipController extends Controller
                 'message' => 'Barang dalam masa pengambilan',
             ], 200);
         }
+    }
+    
     public function saveFcmToken(Request $request)
     {
         \Log::info('Request data:', $request->all()); // Debugging
