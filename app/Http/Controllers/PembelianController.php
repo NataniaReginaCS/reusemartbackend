@@ -24,7 +24,8 @@ class PembelianController extends Controller
             return response()->json(['error' => 'Pembeli not found'], 404);
         }
 
-        $pembelian = Pembelian::where('id_pembeli', $pembeli->id_pembeli)->first();
+        $pembelian = Pembelian::where('id_pembeli', $pembeli->id_pembeli)
+            ->first();
         if (!$pembelian) {
             return response()->json(['error' => 'No purchase history found'], 404);
         }
