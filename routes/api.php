@@ -34,6 +34,7 @@ use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\Penukaran_poinController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -137,6 +138,10 @@ Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
     Route::get('/getUnverifiedPayment', [TransaksiPembelianController::class, 'getUnverifiedPayment']);
     Route::post('/verifyPayment/{nomor_nota}', [TransaksiPembelianController::class, 'verifyPayment']);
     Route::post('/declinePayment/{nomor_nota}', [TransaksiPembelianController::class, 'declinePayment']);
+
+    //Merchandise
+    Route::get('/getPenukaranPoin', [Penukaran_poinController::class, 'getPenukaranPoin']);
+    Route::post('/updatePenukaranPoin/{id}', [Penukaran_poinController::class, 'updatePenukaranPoin']);
 });
 
 Route::middleware('auth:sanctum')->get('/order-history', [PembelianController::class, 'getOrderHistory']);
