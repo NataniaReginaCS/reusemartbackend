@@ -25,6 +25,7 @@ class Pembeli extends Authenticatable
         'telepon',
         'poin',
         'foto',
+        'fcm_token'
     ];
 
     public function getRoleAttribute() {

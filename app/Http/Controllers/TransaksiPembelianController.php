@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pembelian;
 use App\Models\Pembeli;
+use App\Models\Penitip;
 use App\Models\Keranjang;
 use App\Models\Detail_pembelian;
 use App\Models\Barang;
@@ -15,6 +16,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
+
+use Kreait\Firebase\Contract\Messaging;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
+use Google\Auth\Credentials\ServiceAccountCredentials;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
 
 class TransaksiPembelianController extends Controller
 {
@@ -192,6 +200,13 @@ class TransaksiPembelianController extends Controller
                 return response()->json(['message' => 'Pembelian tidak ditemukan'], 404);
             }
             
+            $barang = Detail_pembelian::where('id_pembelian', $pembelian->id_pembelian)->get();
+            foreach ($barang as $item) {
+                $itemBarang = Barang::with('barangPenitipan.penitipanPenitip')->where('id_barang', $item->id_barang)->first();
+                if ($itemBarang) {
+                    $this->sendNotification($itemBarang, 'Pembayaran Diterima', "Pembayaran untuk barang {$itemBarang->nama} yang anda titipkan telah diterima. Terima kasih telah menggunakan layanan kami.");
+                }
+            }
             
             $pembelian->status_pembayaran = 'lunas';
             $pembelian->status_pengiriman = 'disiapkan';
@@ -242,5 +257,37 @@ class TransaksiPembelianController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function sendNotification($barang, $title, $body)
+    {
+        $user = $barang->barangPenitipan?->penitipanPenitip;
+
+        if ($user && $user->fcm_token) {
+            $keyFile = config('firebase.projects.app.credentials.file');
+
+            $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+
+            $credentials = new ServiceAccountCredentials($scopes, $keyFile);
+
+            $token = $credentials->fetchAuthToken()['access_token'];
+
+            $projectId = 'reusemart-a150d';
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+                'message' => [
+                    'token' => $user->fcm_token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                    ],
+                ],
+            ]);
+
+        
+        } 
     }
 }
