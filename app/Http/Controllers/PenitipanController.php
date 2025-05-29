@@ -400,4 +400,20 @@ class PenitipanController extends Controller
             ], 500);
         }
     }
+
+    public function getHistoryPenitipan($id){
+        try {
+            $penitipan = Penitipan::with(['penitipanBarang', 'penitipanPenitip', 'penitipanPegawai'])
+                ->where('id_penitip', $id)
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $penitipan
+                
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Failed to fetch penitipan history'], 500);
+        }
+    }
 }
