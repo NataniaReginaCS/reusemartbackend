@@ -31,7 +31,7 @@ class Komisi extends Model
 
     public function komisiBarang(): BelongsTo
     {
-        return $this->belongsTo(Barang::class, 'id_barang');
+        return $this->belongsTo(Barang::class, 'id_barang', 'id_barang');
     }
 
     public function komisiPegawai(): BelongsTo

@@ -150,19 +150,19 @@ class PegawaiController extends Controller
             }
 
 
-                return response()->json([
-                    "status" => true,
-                    "message" => "Pegawai updated successfully",
-                    "data" => $pegawai
-                ], 200);
-            } catch (Exception $e) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Pegawai not found',
-                    'error' => $e->getMessage(),
-                ], 404);
-            }
+            return response()->json([
+                "status" => true,
+                "message" => "Pegawai updated successfully",
+                "data" => $pegawai
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Pegawai not found',
+                'error' => $e->getMessage(),
+            ], 404);
         }
+    }
 
     public function deletePegawai($id)
     {
@@ -233,6 +233,10 @@ class PegawaiController extends Controller
     {
         try {
             $data = DB::table('pembelian')
+                ->where(function ($query) {
+                    $query->where('pembelian.metode_pengiriman', 'Diambil')
+                        ->orWhere('pembelian.metode_pengiriman', 'Diantar');
+                })
                 ->select(
                     'pembelian.id_pembelian as id_pembelian',
                     'pembelian.status_pengiriman as status_pengiriman',

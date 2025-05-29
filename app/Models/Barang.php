@@ -48,9 +48,9 @@ class Barang extends Model
         return $this->HasMany(Alamat::class, 'id_pembeli');
     }
 
-    public function detailKeranjang()
+    public function detailpem()
     {
-        return $this->hasMany(Detail_keranjang::class, 'id_barang');
+        return $this->hasMany(Detail_pembelian::class, 'id_barang', 'id_barang');
     }
 
     public function penitip(): BelongsTo

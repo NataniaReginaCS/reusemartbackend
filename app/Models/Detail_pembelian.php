@@ -22,7 +22,7 @@ class Detail_pembelian extends Model
 
     public function pembelian()
     {
-        return $this->belongsTo(Pembelian::class, 'id_pembelian');
+        return $this->belongsTo(Pembelian::class, 'id_pembelian', 'id_pembelian');
     }
 
     public function barang()
