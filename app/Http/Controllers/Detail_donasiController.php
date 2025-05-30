@@ -167,7 +167,8 @@ class Detail_donasiController extends Controller
 
     public function fetchBarangForDonasi(){
         try {
-            $barang = Barang::where('status_barang', 'tersedia')->get();
+            $barangs = Barang::where('batas_ambil', '>=', Carbon::now()->addDay())
+            ->where('status_barang', '!=', 'sold out')->get();
             return response()->json([
                 'status' => true,
                 'message' => 'Data Barang',
