@@ -70,6 +70,9 @@ Route::get('/showNamaPenitip/{id}', [BarangController::class, 'showNamaPenitip']
 Route::get('/fetchDiskusi/{idBarang}', [DiskusiController::class, 'fetchDiskusi']);
 Route::get('/fetchRoles', [RoleController::class, 'fetchRoles']);
 Route::get('/getPenitip/{id}', [BarangController::class, 'getPenitip']);
+Route::get('/updateStatusBarangDonasi', [BarangController::class, 'updateStatusBarangDonasi']);
+Route::get('/getTopSeller', [PenitipController::class, 'getTopSeller']);
+Route::get('/benefitTopSeller', [PenitipController::class, 'benefitTopSeller']);
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
     Route::get('/fetchAlamat', [AlamatController::class, 'fetchAlamat']);
@@ -93,10 +96,12 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::get('/getOngoingPembelian/{nomor_nota}', [TransaksiPembelianController::class, 'getOngoingPembelian']);
     Route::post('/addBuktiPembayaran/{nomor_nota}', [TransaksiPembelianController::class, 'addBuktiPembayaran']);
     
-    
+    //Rating
     Route::post('/createRating', [RatingController::class, 'createRating']);
     Route::get('/getRating/{id_barang}', [RatingController::class, 'getRating']);
     Route::get('/fetchRating', [RatingController::class, 'fetchRating']);
+
+    //Mobile Profile
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
@@ -109,6 +114,7 @@ Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function ()
     Route::post('/extendBarangPenitip', [PenitipController::class, 'extendBarangPenitip']);
     Route::post('/ambilBarangPenitip', [PenitipController::class, 'ambilBarangPenitip']);
     Route::post('/save-token', [PenitipController::class, 'saveFcmToken']);
+    Route::get('/getHistoryPenitipan/{id}', [PenitipanController::class, 'getHistoryPenitipan']);
 });
 
 Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function () {
@@ -147,15 +153,9 @@ Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
 Route::middleware('auth:sanctum')->get('/order-history', [PembelianController::class, 'getOrderHistory']);
 Route::middleware('auth:sanctum')->get('/order-history/{id}', [PembelianController::class, 'getOrderHistoryById']);
 Route::middleware('auth:sanctum')->get('/order-details/{id}', [PembelianController::class, 'getOrderDetails']);
-
-Route::middleware('auth:sanctum')->get('/order-history', [PembelianController::class, 'getOrderHistory']);
-Route::middleware('auth:sanctum')->get('/order-history/{id}', [PembelianController::class, 'getOrderHistoryById']);
-Route::middleware('auth:sanctum')->get('/order-details/{id}', [PembelianController::class, 'getOrderDetails']);
-
 Route::post('/addDiskusi/{id}', [DiskusiController::class, 'addDiskusi']);
 
 Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () {
-
     Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
     Route::get('/fetchTransaksiByGudang', [PegawaiController::class, 'fetchTransaksiByGudang']);
     Route::get('/fetchTransaksiGudangById/{id}', [PegawaiController::class, 'fetchTransaksiGudangById']);

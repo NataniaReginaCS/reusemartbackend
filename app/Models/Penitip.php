@@ -41,7 +41,7 @@ class Penitip extends Authenticatable
         return $this->hasMany(Komisi::class, 'id_penitip');
     }
 
-    public function penitipDiskusi(): BelongsTo
+    public function penitipDiskusi(): BelongsTo 
     {
         return $this->belongsTo(Penitipan::class, 'id_penitip');
     }

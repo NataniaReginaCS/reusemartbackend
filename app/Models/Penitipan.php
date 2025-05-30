@@ -22,17 +22,17 @@ class Penitipan extends Model
 
     public function penitipanPegawai(): BelongsTo
     {
-        return $this->belongsTo(Pegawai::class, 'id_pegawai');
+        return $this->BelongsTo(Pegawai::class, 'id_pegawai');
     }
 
-    public function penitipanPenitip(): BelongsTo
+    public function penitipanPenitip(): HasMany
     {
-        return $this->BelongsTo(Penitip::class, 'id_penitip');
+        return $this->hasMany(Penitip::class, 'id_penitip', 'id_penitip');
     }
 
     public function penitipanBarang(): HasMany
     {
-        return $this->hasMany(Barang::class, 'id_barang');
+        return $this->hasMany(Barang::class, 'id_penitipan', 'id_penitipan');
     }
 
 }
