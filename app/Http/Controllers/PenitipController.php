@@ -455,4 +455,91 @@ class PenitipController extends Controller
         return response()->json(['message' => 'Penitip not found'], 404);
 
     }
+
+    public function getTopSeller(){
+        try{
+            $bulan = Carbon::now()->subMonth()->month;
+            $tahun = Carbon::now()->year;
+
+            $initPenitip = Penitip::all();
+            foreach ($initPenitip as $penitip) {
+                $penitip->badges = false;
+                $penitip->save();
+            }
+    
+            $topSeller = DB::table('penitip')
+                ->join('penitipan', 'penitip.id_penitip', '=', 'penitipan.id_penitip')
+                ->join('barang', 'penitipan.id_penitipan', '=', 'barang.id_penitipan')
+                ->join('detail_pembelian', 'barang.id_barang', '=', 'detail_pembelian.id_barang')
+                ->join('pembelian', 'detail_pembelian.id_pembelian', '=', 'pembelian.id_pembelian')
+                ->where('barang.status_barang', 'Sold Out')
+                ->whereMonth('pembelian.tanggal_laku', $bulan)
+                ->whereYear('pembelian.tanggal_laku', $tahun)
+                ->select(
+                    'penitip.id_penitip',
+                    'penitip.nama', 
+                    DB::raw('SUM(barang.harga) as total_penjualan')
+                )
+                ->groupBy('penitip.id_penitip', 'penitip.nama')
+                ->orderByDesc('total_penjualan')
+                ->limit(1)
+                ->get();
+
+                if ($topSeller->isNotEmpty()) {
+                    $penitip = Penitip::find($topSeller[0]->id_penitip);
+                    $penitip->badges = true;
+                    $penitip->save();
+                }
+            
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'penitip' => $topSeller,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function benefitTopSeller()
+    {
+        try{
+            $month = Carbon::now()->subMonth()->month;
+            $year = Carbon::now()->year;
+
+            $penitip = Penitip::where('badges', true)->first();
+            $totalPenjualan = DB::table('penitip')
+                ->join('penitipan', 'penitip.id_penitip', '=', 'penitipan.id_penitip')
+                ->join('barang', 'penitipan.id_penitipan', '=', 'barang.id_penitipan')
+                ->join('detail_pembelian', 'barang.id_barang', '=', 'detail_pembelian.id_barang')
+                ->join('pembelian', 'detail_pembelian.id_pembelian', '=', 'pembelian.id_pembelian')
+                ->leftJoin('komisi', function($join) {
+                    $join->on('barang.id_barang', '=', 'komisi.id_barang')
+                        ->whereColumn('komisi.id_penitip', '=', 'penitip.id_penitip');
+                })
+                ->where('barang.status_barang', 'sold out')
+                ->where('penitip.id_penitip', $penitip->id_penitip)
+                ->whereMonth('pembelian.tanggal_laku', $month)
+                ->whereYear('pembelian.tanggal_laku', $year)
+                ->select(DB::raw('COALESCE(SUM(komisi.komisi_penitip), 0) as total_penjualan'))
+                ->first();
+            
+            $bonusBadges = 0.01 * $totalPenjualan->total_penjualan;
+            $totalKeuntungan = $totalPenjualan->total_penjualan + $bonusBadges;
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'penitip' => $penitip,
+                'total_penjualan' => $totalPenjualan->total_penjualan,
+                'bonus_badges' => $bonusBadges,
+                'total_keuntungan' => $totalKeuntungan,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

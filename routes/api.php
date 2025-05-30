@@ -70,6 +70,9 @@ Route::get('/showNamaPenitip/{id}', [BarangController::class, 'showNamaPenitip']
 Route::get('/fetchDiskusi/{idBarang}', [DiskusiController::class, 'fetchDiskusi']);
 Route::get('/fetchRoles', [RoleController::class, 'fetchRoles']);
 Route::get('/getPenitip/{id}', [BarangController::class, 'getPenitip']);
+Route::get('/updateStatusBarangDonasi', [BarangController::class, 'updateStatusBarangDonasi']);
+Route::get('/getTopSeller', [PenitipController::class, 'getTopSeller']);
+Route::get('/benefitTopSeller', [PenitipController::class, 'benefitTopSeller']);
 
 Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function () {
     Route::get('/fetchAlamat', [AlamatController::class, 'fetchAlamat']);

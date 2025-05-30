@@ -8,6 +8,7 @@ use App\Models\Penitipan;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Carbon\Carbon;
 
 class BarangController extends Controller
 {
@@ -344,6 +345,31 @@ class BarangController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to retrieve penitip data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateStatusBarangDonasi(){
+        try{
+            $barangs = Barang::where('batas_ambil', '<', Carbon::now())
+            ->where('status_barang', 'tersedia')
+            ->get();
+
+            foreach ($barangs as $barang) {
+                $barang->status_barang = 'barang untuk donasi';
+                $barang->save();
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Status barang donasi updated successfully',
+                'data' => $barangs
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update status barang donasi',
                 'error' => $e->getMessage(),
             ], 500);
         }
