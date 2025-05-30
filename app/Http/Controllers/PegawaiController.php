@@ -27,6 +27,21 @@ use Carbon\Carbon;
 
 class PegawaiController extends Controller
 {
+  public function fetchPegawaiByLogin(Request $request)
+    {
+        try {
+            $pegawai = Auth::guard('pegawai')->user();
+            return response()->json([
+                'pegawai' => $pegawai,
+                'message' => 'Data retrieved successfully',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
     public function addPegawai(Request $request)
     {
         try {

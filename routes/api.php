@@ -222,5 +222,11 @@ Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
     Route::get('/laporan/penjualan-bulanan/download', [LaporanController::class, 'downloadLaporanPenjualanBulanan']);
 });
 
+Route::middleware(['auth:sanctum', KurirMiddleware::class])->group(function () {
+    // Mendonasikan Barang
+    Route::get('/fetchPegawaiByLogin', [PegawaiController::class, 'fetchPegawaiByLogin']);
+});
+
+
 
 
