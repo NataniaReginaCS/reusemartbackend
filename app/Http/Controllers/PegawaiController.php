@@ -246,8 +246,8 @@ class PegawaiController extends Controller
                     'pembelian.status_pengiriman as status_pengiriman',
                     'pembelian.metode_pengiriman as metode_pengiriman',
                     'pembelian.tanggal_lunas',
-<<<<<<< HEAD
                     'pembelian.tanggal_pengiriman as tanggal_pengiriman',
+
 
 =======
 >>>>>>> main
@@ -410,7 +410,6 @@ class PegawaiController extends Controller
         }
     }
 
-<<<<<<< HEAD
 
     public function fetchDataNota($id_pembelian)
     {
@@ -583,7 +582,6 @@ class PegawaiController extends Controller
     }
 
 
-=======
     private function sendNotificationToPenitip($barang, $title, $body)
     {
         $user = $barang->barangPenitipan?->penitipanPenitip;
@@ -674,5 +672,5 @@ class PegawaiController extends Controller
             ]);
         } 
     }
->>>>>>> main
+
 }
