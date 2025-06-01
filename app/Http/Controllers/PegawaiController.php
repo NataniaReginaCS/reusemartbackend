@@ -5,7 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Pembelian;
 use Illuminate\Http\Request;
 use App\Models\Pegawai;
+use App\Models\Detail_pembelian;
+use App\Models\Pembeli;
 use App\Models\Barang;
+use App\Models\Penitip;
+use Kreait\Firebase\Contract\Messaging;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
+use Google\Auth\Credentials\ServiceAccountCredentials;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
+
 use Illuminate\Support\Facades\DB;
 
 use Exception;
@@ -238,6 +248,7 @@ class PegawaiController extends Controller
                     'pembelian.tanggal_lunas',
                     'pembelian.tanggal_pengiriman as tanggal_pengiriman',
 
+
                 )
                 ->get();
             return response()->json([
@@ -348,6 +359,35 @@ class PegawaiController extends Controller
             $pembelian = Pembelian::find($id);
             if ($pembelian) {
                 $pembelian->update($validatedData);
+
+                $barang = Detail_pembelian::where('id_pembelian', $pembelian->id_pembelian)->get();
+                $pembeli = Pembeli::where('id_pembeli', $pembelian->id_pembeli)->first();
+            
+                if($pembelian->metode_pengiriman == 'diantar'){
+                    $kurir = Pegawai::where('id_pegawai', $pembelian->id_pegawai)->first();
+                    if($kurir) {
+                        $this->sendNotificationToKurir($kurir, 'Penjadwalan Barang', "Anda telah dijadwalkan untuk mengirim barang pada tanggal {$pembelian->tanggal_pengiriman}.Silahkan datang ke gudang untuk mengambil barang yang akan dikirim.");
+                    }
+                }
+                if ($pembeli) {
+                    if($pembelian->metode_pengiriman == 'diambil'){
+                        $this->sendNotificationToPembeli($pembeli, 'Penjadwalan Barang', "Transaksi dengan nomor nota {$pembelian->nomor_nota} telah dijadwalkan untuk diambil pada tanggal {$pembelian->tanggal_pengiriman}. Silahkan datang ke gudang untuk mengambil barang yang telah dibeli.");
+                    }
+                    $this->sendNotificationToPembeli($pembeli, 'Penjadwalan Barang', "Transaksi dengan nomor nota {$pembelian->nomor_nota} telah dijadwalkan untuk dikirim pada tanggal {$pembelian->tanggal_pengiriman}. Terima kasih telah menggunakan layanan kami.");
+                }
+
+                foreach ($barang as $item) {
+                    $itemBarang = Barang::with('barangPenitipan.penitipanPenitip')->where('id_barang', $item->id_barang)->first();
+                    if ($itemBarang) {
+                        if($pembelian->metode_pengiriman == 'diambil'){
+                            $this->sendNotificationToPenitip($itemBarang, 'Penjadwalan Barang', "Barang atas nama {$itemBarang->nama} telah dijadwalkan untuk diambil pembeli pada tanggal {$pembelian->tanggal_pengiriman}.Terima kasih telah menggunakan layanan kami.");
+                        }else{
+
+                            $this->sendNotificationToPenitip($itemBarang, 'Penjadwalan Barang', "Barang atas nama {$itemBarang->nama} telah dijadwalkan untuk dikirim pada tanggal {$pembelian->tanggal_pengiriman}.Terima kasih telah menggunakan layanan kami.");
+                        }
+                    }
+                }
+
                 return response()->json([
                     'status' => true,
                     'message' => 'pembelian updated successfully',
@@ -539,5 +579,96 @@ class PegawaiController extends Controller
         ], 200);
     }
 
+
+    private function sendNotificationToPenitip($barang, $title, $body)
+    {
+        $user = $barang->barangPenitipan?->penitipanPenitip;
+
+        if ($user && $user->fcm_token) {
+            $keyFile = config('firebase.projects.app.credentials.file');
+
+            $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+
+            $credentials = new ServiceAccountCredentials($scopes, $keyFile);
+
+            $token = $credentials->fetchAuthToken()['access_token'];
+
+            $projectId = 'reusemart-a150d';
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+                'message' => [
+                    'token' => $user->fcm_token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                    ],
+                ],
+            ]);
+
+        
+        } 
+    }
+    private function sendNotificationToPembeli($user, $title, $body)
+    {
+        
+        if ($user && $user->fcm_token) {
+            $keyFile = config('firebase.projects.app.credentials.file');
+
+            $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+
+            $credentials = new ServiceAccountCredentials($scopes, $keyFile);
+
+            $token = $credentials->fetchAuthToken()['access_token'];
+
+            $projectId = 'reusemart-a150d';
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+                'message' => [
+                    'token' => $user->fcm_token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                    ],
+                ],
+            ]);
+        } 
+
+        
+        
+    }
+
+    private function sendNotificationToKurir($user, $title, $body)
+    {
+        if ($user && $user->fcm_token) {
+            $keyFile = config('firebase.projects.app.credentials.file');
+
+            $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+
+            $credentials = new ServiceAccountCredentials($scopes, $keyFile);
+
+            $token = $credentials->fetchAuthToken()['access_token'];
+
+            $projectId = 'reusemart-a150d';
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+                'message' => [
+                    'token' => $user->fcm_token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                    ],
+                ],
+            ]);
+        } 
+    }
 
 }
