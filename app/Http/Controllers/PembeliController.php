@@ -21,6 +21,15 @@ class PembeliController extends Controller
         return response()->json($user, 200);
     }
 
+    public function fetchPembeliById($id)
+    {
+        $pembeli = Pembeli::find($id);
+        if (!$pembeli) {
+            return response()->json(['message' => 'Pembeli not found'], 404);
+        }
+        return response()->json($pembeli, 200);
+    }
+
     public function addAlamat(Request $request){
         try{
 

@@ -35,7 +35,7 @@ class Barang extends Model
 
     public function barangPenitipan(): BelongsTo
     {
-        return $this->belongsTo(Penitipan::class, 'id_penitipan');
+        return $this->belongsTo(Penitipan::class, 'id_penitipan', 'id_penitipan');
     }
 
     public function barang()
