@@ -38,6 +38,17 @@ class Barang extends Model
         return $this->belongsTo(Penitipan::class, 'id_penitipan');
     }
 
+    public function barang()
+    {
+        return $this->belongsTo(Barang::class, 'id_barang');
+    }
+
+    public function pembelian()
+    {
+        return $this->belongsTo(Pembelian::class, 'id_pembelian');
+    }
+
+
     public function barangKategori(): BelongsTo
     {
         return $this->belongsTo(Kategori::class, 'id_kategori');

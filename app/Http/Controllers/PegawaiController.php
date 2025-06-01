@@ -9,6 +9,8 @@ use App\Models\Barang;
 use Illuminate\Support\Facades\DB;
 
 use Exception;
+use Illuminate\Validation\ValidationException;
+
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
@@ -226,12 +228,15 @@ class PegawaiController extends Controller
                 ->where(function ($query) {
                     $query->where('pembelian.metode_pengiriman', 'Diambil')
                         ->orWhere('pembelian.metode_pengiriman', 'Diantar');
+
                 })
+                ->where('pembelian.status_pengiriman', '!=', 'Selesai')
                 ->select(
                     'pembelian.id_pembelian as id_pembelian',
                     'pembelian.status_pengiriman as status_pengiriman',
                     'pembelian.metode_pengiriman as metode_pengiriman',
                     'pembelian.tanggal_lunas',
+                    'pembelian.tanggal_pengiriman as tanggal_pengiriman',
 
                 )
                 ->get();
@@ -362,5 +367,177 @@ class PegawaiController extends Controller
             ], 500);
         }
     }
+
+
+    public function fetchDataNota($id_pembelian)
+    {
+        try {
+            $data = DB::table('pembelian')
+                ->join('detail_pembelian', 'pembelian.id_pembelian', '=', 'detail_pembelian.id_pembelian')
+                ->join('pembeli', 'pembelian.id_pembeli', '=', 'pembeli.id_pembeli')
+                ->join('alamat', 'pembeli.id_pembeli', '=', 'alamat.id_pembeli')
+                ->join('barang', 'detail_pembelian.id_barang', '=', 'barang.id_barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->join('pegawai', 'pembelian.id_pegawai', '=', 'pegawai.id_pegawai')
+                ->join('pegawai as qc', 'penitipan.id_pegawai', '=', 'qc.id_pegawai')
+                ->where('pembelian.id_pembelian', $id_pembelian)
+                ->select(
+                    'pembelian.id_pembelian as id_pembelian',
+                    'pembelian.nomor_nota as nomor_nota',
+                    'pembelian.tanggal_laku as tanggal_laku',
+                    'pembelian.tanggal_lunas as tanggal_lunas',
+                    'pembelian.tanggal_pengiriman as tanggal_pengiriman',
+                    'pembeli.nama as nama',
+                    'pembeli.email as email',
+                    'alamat.nama_jalan as nama_alamat',
+                    'alamat.nama_kota as nama_kota',
+                    'barang.nama as nama_barang',
+                    'pembelian.total as total',
+                    'pembelian.ongkir as ongkir',
+                    'pembelian.poin_digunakan as poin_digunakan',
+                    'pembelian.poin_didapat as poin_didapat',
+                    'pembeli.poin as poin',
+                    'pegawai.nama as nama_pegawai',
+                    'qc.nama as nama_qc',
+                    'qc.id_pegawai as id_qc'
+                )
+                ->first();
+
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'data' => $data,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function selesaiTransaksi($id_pembelian)
+    {
+        $barangList = DB::table('detail_pembelian')
+            ->join('barang', 'detail_pembelian.id_barang', '=', 'barang.id_barang')
+            ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+            ->where('detail_pembelian.id_pembelian', $id_pembelian)
+            ->select(
+                'barang.id_barang',
+                'barang.harga',
+                'barang.id_hunter',
+                'barang.status_perpanjangan',
+                'penitipan.id_penitip',
+                'penitipan.tanggal_masuk'
+            )
+            ->get();
+
+        // Update barang status
+        DB::table('barang')
+            ->whereIn('id_barang', $barangList->pluck('id_barang'))
+            ->update([
+                'status_transaksi' => 'Selesai',
+                'status_barang' => 'Terjual',
+            ]);
+
+        // Update pembelian status
+        DB::table('pembelian')
+            ->where('id_pembelian', $id_pembelian)
+            ->update([
+                'status_pengiriman' => 'Selesai',
+            ]);
+
+        // Initialize wallet accumulators
+        $walletPerPenitip = [];
+        $walletPerHunter = [];
+
+        // Insert komisi rows
+        foreach ($barangList as $barang) {
+            $harga = $barang->harga;
+            $komisi_penitip = 0;
+            $komisi_hunter = 0;
+            $komisi_reusemart = 0;
+            $bonus_penitip = 0;
+
+            // Commission logic
+            if ($barang->id_hunter) {
+                if ($barang->status_perpanjangan == 0) {
+                    $komisi_penitip = $harga * 0.8;
+                    $komisi_hunter = $harga * 0.05;
+                    $komisi_reusemart = $harga * 0.15;
+                } else {
+                    $komisi_penitip = $harga * 0.7;
+                    $komisi_hunter = $harga * 0.05;
+                    $komisi_reusemart = $harga * 0.25;
+                }
+            } else {
+                if ($barang->status_perpanjangan == 0) {
+                    $komisi_penitip = $harga * 0.8;
+                    $komisi_reusemart = $harga * 0.2;
+                } else {
+                    $komisi_penitip = $harga * 0.7;
+                    $komisi_reusemart = $harga * 0.3;
+                }
+            }
+
+            // Bonus logic
+            if (Carbon::parse($barang->tanggal_masuk)->greaterThanOrEqualTo(Carbon::now()->subDays(7))) {
+                $bonus_penitip = $komisi_reusemart * 0.1;
+                $komisi_reusemart -= $bonus_penitip;
+            }
+
+            // Insert komisi
+            DB::table('komisi')->insert([
+                'id_barang' => $barang->id_barang,
+                'id_penitip' => $barang->id_penitip,
+                'id_pegawai' => $barang->id_hunter,
+                'id_pembelian' => $id_pembelian,
+                'komisi_reusemart' => $komisi_reusemart,
+                'komisi_penitip' => $komisi_penitip,
+                'komisi_hunter' => $komisi_hunter,
+                'bonus_penitip' => $bonus_penitip,
+            ]);
+
+            // Accumulate penitip wallet
+            $walletPerPenitip[$barang->id_penitip] = ($walletPerPenitip[$barang->id_penitip] ?? 0) + ($komisi_penitip + $bonus_penitip);
+
+            // Accumulate hunter wallet (if exists)
+            if ($barang->id_hunter) {
+                $walletPerHunter[$barang->id_hunter] = ($walletPerHunter[$barang->id_hunter] ?? 0) + $komisi_hunter;
+            }
+        }
+
+        // Update penitip wallets
+        foreach ($walletPerPenitip as $id_penitip => $amount) {
+            DB::table('penitip')
+                ->where('id_penitip', $id_penitip)
+                ->increment('wallet', $amount);
+        }
+
+        // Update hunter wallets
+        foreach ($walletPerHunter as $id_hunter => $amount) {
+            DB::table('pegawai')
+                ->where('id_pegawai', $id_hunter)
+                ->increment('wallet', $amount);
+        }
+
+        // Update pembeli poin
+        $transaksiInfo = DB::table('pembelian')
+            ->join('pembeli', 'pembelian.id_pembeli', '=', 'pembeli.id_pembeli')
+            ->where('pembelian.id_pembelian', $id_pembelian)
+            ->select('pembeli.id_pembeli', 'pembelian.poin_didapat')
+            ->first();
+
+        if ($transaksiInfo) {
+            DB::table('pembeli')
+                ->where('id_pembeli', $transaksiInfo->id_pembeli)
+                ->increment('poin', $transaksiInfo->poin_didapat);
+        }
+
+        return response()->json([
+            'message' => 'Transaksi selesai dan semua komisi serta wallet berhasil diperbarui',
+        ], 200);
+    }
+
 
 }
