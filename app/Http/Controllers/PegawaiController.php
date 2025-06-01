@@ -249,6 +249,8 @@ class PegawaiController extends Controller
                     'pembelian.tanggal_pengiriman as tanggal_pengiriman',
 
 
+=======
+>>>>>>> main
                 )
                 ->get();
             return response()->json([

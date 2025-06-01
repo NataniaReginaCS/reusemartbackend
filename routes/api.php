@@ -97,7 +97,7 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::post('/addBuktiPembayaran/{nomor_nota}', [TransaksiPembelianController::class, 'addBuktiPembayaran']);
 
 
-    
+
     //Rating
     Route::post('/createRating', [RatingController::class, 'createRating']);
     Route::get('/getRating/{id_barang}', [RatingController::class, 'getRating']);
