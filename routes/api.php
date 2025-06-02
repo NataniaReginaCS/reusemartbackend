@@ -84,7 +84,7 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::post('/editAlamat/{id}', [AlamatController::class, 'updateAlamat']);
     Route::delete('/deleteAlamat/{id}', [AlamatController::class, 'deleteAlamat']);
     Route::post('/setUtama/{id}', [AlamatController::class, 'setUtama']);
-    
+
     //Keranjang 
     Route::post('/addToKeranjang/{id}', [KeranjangController::class, 'addToKeranjang']);
     Route::get('/fetchKeranjang', [KeranjangController::class, 'fetchKeranjang']);
@@ -95,7 +95,9 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     //Checkout
     Route::get('/getOngoingPembelian/{nomor_nota}', [TransaksiPembelianController::class, 'getOngoingPembelian']);
     Route::post('/addBuktiPembayaran/{nomor_nota}', [TransaksiPembelianController::class, 'addBuktiPembayaran']);
-    
+
+
+
     //Rating
     Route::post('/createRating', [RatingController::class, 'createRating']);
     Route::get('/getRating/{id_barang}', [RatingController::class, 'getRating']);
@@ -125,7 +127,7 @@ Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function
         Route::put('/{id}', [Request_donasiController::class, 'update']);
         Route::put('/{id}/alokasi', [Request_donasiController::class, 'alokasi']);
         Route::delete('/{id}', [Request_donasiController::class, 'destroy']);
-        
+
         Route::get('/search', [Request_donasiController::class, 'search']);
         Route::get('/filterByDate', [Request_donasiController::class, 'filterByDate']);
         Route::get('/filterByStatus', [Request_donasiController::class, 'filterByStatus']);
@@ -139,7 +141,6 @@ Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
     Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
     Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
     Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
-
     //Verifikasi
     Route::get('/getUnverifiedPayment', [TransaksiPembelianController::class, 'getUnverifiedPayment']);
     Route::post('/verifyPayment/{nomor_nota}', [TransaksiPembelianController::class, 'verifyPayment']);
@@ -162,6 +163,8 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
     Route::put('/updateTanggalPengiriman/{id}', [PegawaiController::class, 'update']);
     Route::get('/fetchDataPembelian/{id}', [PegawaiController::class, 'fetchDataPembelian']);
     Route::get('/fetchDataPegawai', [PegawaiController::class, 'fetchDataPegawai']);
+    Route::get('/fetchDataNota/{id}', [PegawaiController::class, 'fetchDataNota']);
+    Route::put('/selesaiTransaksi/{id}', [PegawaiController::class, 'selesaiTransaksi']);
 
 });
 
