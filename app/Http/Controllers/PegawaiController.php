@@ -27,7 +27,7 @@ use Carbon\Carbon;
 
 class PegawaiController extends Controller
 {
-  public function fetchPegawaiByLogin(Request $request)
+    public function fetchPegawaiByLogin(Request $request)
     {
         try {
             $pegawai = Auth::guard('pegawai')->user();
@@ -42,6 +42,38 @@ class PegawaiController extends Controller
             ], 500);
         }
     }
+
+    public function getJadwalPengirimanKurir(){
+        $kurir = Auth::guard('pegawai')->user();
+        try {
+            $jadwalPengiriman = DB::table('pembelian')
+                ->where('pembelian.metode_pengiriman', 'diantar')
+                ->where('pembelian.status_pengiriman',   '!=', 'Selesai')
+                ->where('pembelian.status_pembayaran', '!=', 'batal')
+                ->where('pembelian.id_pegawai', $kurir->id_pegawai)
+                ->join('pembeli', 'pembelian.id_pembeli', '=', 'pembeli.id_pembeli')
+                ->join('alamat', 'pembelian.id_alamat', '=', 'alamat.id_alamat')
+                ->select(
+                    'pembelian.id_pembelian as id_pembelian',
+                    'pembelian.tanggal_pengiriman as tanggal_pengiriman',
+                    'pembelian.status_pengiriman as status_pengiriman',
+                    'pembelian.metode_pengiriman as metode_pengiriman',
+                    'pembeli.nama as nama_pembeli',
+                    'alamat.nama_jalan as nama_jalan',
+                )
+                ->get();
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'jadwal' => $jadwalPengiriman,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function addPegawai(Request $request)
     {
         try {

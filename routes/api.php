@@ -225,6 +225,7 @@ Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
 Route::middleware(['auth:sanctum', KurirMiddleware::class])->group(function () {
     // Mendonasikan Barang
     Route::get('/fetchPegawaiByLogin', [PegawaiController::class, 'fetchPegawaiByLogin']);
+    Route::get('/jadwalPengirimanKurir', [PegawaiController::class, 'getJadwalPengirimanKurir']);
 });
 
 
