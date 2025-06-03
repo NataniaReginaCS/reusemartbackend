@@ -294,16 +294,11 @@ class PegawaiController extends Controller
                     'pembelian.metode_pengiriman as metode_pengiriman',
                     'pembelian.tanggal_lunas',
                     'pembelian.tanggal_pengiriman as tanggal_pengiriman',
-
-
-=======
->>>>>>> main
-                )
-                ->get();
-            return response()->json([
-                'message' => 'Data retrieved successfully',
-                'data' => $data,
-            ]);
+                )->get();
+                return response()->json([
+                    'message' => 'Data retrieved successfully',
+                    'data' => $data,
+                ]);
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to retrieve data',
