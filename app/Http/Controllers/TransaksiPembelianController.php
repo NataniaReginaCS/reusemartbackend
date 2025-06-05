@@ -96,6 +96,13 @@ class TransaksiPembelianController extends Controller
             
             
             foreach ($keranjang as $item) {
+                $barang = Barang::find($item->id_barang);
+                if (!$barang) {
+                    return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+                }
+                $barang->status_barang = 'sold out';
+                $barang->save();
+                
                 $detailPembelian = Detail_pembelian::create([
                     'id_pembelian' => $pembelian->id_pembelian,
                     'id_barang' => $item->id_barang,
@@ -126,6 +133,26 @@ class TransaksiPembelianController extends Controller
         return response()->json([
             'pembelian' => $pembelian,
         ]);
+    }
+
+    public function getPembelianDiatas150K(){
+        try{
+            $pembelian = Pembelian::where('status_pembayaran', 'lunas')
+                ->with(['pembeli', 'detailPembelian.barang'])
+                ->where('total', '>', 150000)
+                ->get();
+                
+            return response()->json([
+                'message' => 'Berhasil mendapatkan pembelian',
+                'pembelian' => $pembelian,
+            ]);
+            
+        }catch(\Exception $e){
+            return response()->json([
+                'message' => 'Gagal mendapatkan pembelian',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
     
     public function addBuktiPembayaran(Request $request , $nomor_nota){

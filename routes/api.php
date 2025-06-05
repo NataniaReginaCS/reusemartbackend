@@ -225,10 +225,14 @@ Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
     Route::get('/laporan/penjualan-bulanan/download', [LaporanController::class, 'downloadLaporanPenjualanBulanan']);
 });
 
+Route::get('/getPembelianDiatas150K', [TransaksiPembelianController::class, 'getPembelianDiatas150K']);
+
 Route::middleware(['auth:sanctum', KurirMiddleware::class])->group(function () {
-    // Mendonasikan Barang
+    // Pengiriman
     Route::get('/fetchPegawaiByLogin', [PegawaiController::class, 'fetchPegawaiByLogin']);
     Route::get('/jadwalPengirimanKurir', [PegawaiController::class, 'getJadwalPengirimanKurir']);
+    Route::get('/historyPengirimanKurir', [PegawaiController::class, 'getHistoryPengirimanKurir']);
+    Route::post('/selesaikanPengirimanKurir/{id}', [PegawaiController::class, 'selesaikanPengiriman']);
 });
 
 
