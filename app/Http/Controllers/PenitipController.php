@@ -223,14 +223,16 @@ class PenitipController extends Controller
                     'pembelian.tanggal_lunas',
                     'barang.harga as harga',
                     'barang.foto as foto_barang',
-                    'barang.status_barang as status_barang',
+                    'barang.status_barang as status_barang'
 
                 )
                 ->get();
+
             return response()->json([
                 'message' => 'Data retrieved successfully',
                 'data' => $data,
             ]);
+
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to retrieve data',
@@ -288,9 +290,14 @@ class PenitipController extends Controller
             $today = Carbon::now()->toDateString();
 
 
+
             Barang::whereIn('status_barang', ['Tersedia', 'Belum Diambil'])
                 ->whereDate('tanggal_akhir', '<', $today)
-                ->update(['status_barang' => 'Donasi']);
+                ->update(['status_barang' => 'Belum Diambil']);
+
+            Barang::whereNot('status_barang', 'Didonasikan')
+                ->whereDate('batas_ambil', '<', $today)
+                ->update(['status_barang' => 'Didonasikan']);
 
             $data = DB::table('barang')
                 ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
@@ -329,13 +336,6 @@ class PenitipController extends Controller
             $today = Carbon::now()->toDateString();
 
 
-            Barang::whereIn('status_barang', ['Tersedia', 'Belum Diambil'])
-                ->whereDate('tanggal_akhir', '<', $today)
-                ->update(['status_barang' => 'Belum Diambil']);
-
-            $updatedHangus = Barang::whereNot('status_barang', 'Hangus')
-                ->whereDate('batas_ambil', '<', $today)
-                ->update(['status_barang' => 'Hangus']);
 
             $data = DB::table('barang')
                 ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
@@ -345,7 +345,7 @@ class PenitipController extends Controller
                 ->select(
                     'barang.id_barang as id_barang',
                     'barang.nama as nama_barang',
-                    'barang.foto as foto_barang',
+                    'barang.foto as foto',
                     'barang.harga as harga',
                     'barang.status_barang as status_barang',
                     'barang.status_perpanjangan as status_perpanjangan',
@@ -428,7 +428,7 @@ class PenitipController extends Controller
         } else {
 
             $detailTransaksi->update([
-                'status_barang' => 'Belum Diambil',
+                'status_barang' => 'Diambil Kembali',
             ]);
 
             return response()->json([
@@ -436,7 +436,7 @@ class PenitipController extends Controller
             ], 200);
         }
     }
-    
+
     public function saveFcmToken(Request $request)
     {
         \Log::info('Request data:', $request->all()); // Debugging
@@ -456,8 +456,9 @@ class PenitipController extends Controller
 
     }
 
-    public function getTopSeller(){
-        try{
+    public function getTopSeller()
+    {
+        try {
             $bulan = Carbon::now()->subMonth()->month;
             $tahun = Carbon::now()->year;
 
@@ -466,7 +467,7 @@ class PenitipController extends Controller
                 $penitip->badges = false;
                 $penitip->save();
             }
-    
+
             $topSeller = DB::table('penitip')
                 ->join('penitipan', 'penitip.id_penitip', '=', 'penitipan.id_penitip')
                 ->join('barang', 'penitipan.id_penitipan', '=', 'barang.id_penitipan')
@@ -475,9 +476,15 @@ class PenitipController extends Controller
                 ->where('barang.status_barang', 'Sold Out')
                 ->whereMonth('pembelian.tanggal_laku', $bulan)
                 ->whereYear('pembelian.tanggal_laku', $tahun)
+                ->when(request('order') === 'asc', function ($query) {
+                    return $query->orderBy('total_penjualan', 'asc');
+                })
+                ->when(request('order') === 'desc', function ($query) {
+                    return $query->orderBy('total_penjualan', 'desc');
+                })
                 ->select(
                     'penitip.id_penitip',
-                    'penitip.nama', 
+                    'penitip.nama',
                     DB::raw('SUM(barang.harga) as total_penjualan')
                 )
                 ->groupBy('penitip.id_penitip', 'penitip.nama')
@@ -485,12 +492,12 @@ class PenitipController extends Controller
                 ->limit(1)
                 ->get();
 
-                if ($topSeller->isNotEmpty()) {
-                    $penitip = Penitip::find($topSeller[0]->id_penitip);
-                    $penitip->badges = true;
-                    $penitip->save();
-                }
-            
+            if ($topSeller->isNotEmpty()) {
+                $penitip = Penitip::find($topSeller[0]->id_penitip);
+                $penitip->badges = true;
+                $penitip->save();
+            }
+
             return response()->json([
                 'message' => 'Data retrieved successfully',
                 'penitip' => $topSeller,
@@ -505,7 +512,7 @@ class PenitipController extends Controller
 
     public function benefitTopSeller()
     {
-        try{
+        try {
             $month = Carbon::now()->subMonth()->month;
             $year = Carbon::now()->year;
 
@@ -515,7 +522,7 @@ class PenitipController extends Controller
                 ->join('barang', 'penitipan.id_penitipan', '=', 'barang.id_penitipan')
                 ->join('detail_pembelian', 'barang.id_barang', '=', 'detail_pembelian.id_barang')
                 ->join('pembelian', 'detail_pembelian.id_pembelian', '=', 'pembelian.id_pembelian')
-                ->leftJoin('komisi', function($join) {
+                ->leftJoin('komisi', function ($join) {
                     $join->on('barang.id_barang', '=', 'komisi.id_barang')
                         ->whereColumn('komisi.id_penitip', '=', 'penitip.id_penitip');
                 })
@@ -525,7 +532,7 @@ class PenitipController extends Controller
                 ->whereYear('pembelian.tanggal_laku', $year)
                 ->select(DB::raw('COALESCE(SUM(komisi.komisi_penitip), 0) as total_penjualan'))
                 ->first();
-            
+
             $bonusBadges = 0.01 * $totalPenjualan->total_penjualan;
             $totalKeuntungan = $totalPenjualan->total_penjualan + $bonusBadges;
             return response()->json([
