@@ -356,17 +356,19 @@ class PegawaiController extends Controller
 
                 })
                 ->where('pembelian.status_pengiriman', '!=', 'Selesai')
+                ->where('pembelian.status_pengiriman', '!=', 'Hangus')
                 ->select(
                     'pembelian.id_pembelian as id_pembelian',
                     'pembelian.status_pengiriman as status_pengiriman',
                     'pembelian.metode_pengiriman as metode_pengiriman',
                     'pembelian.tanggal_lunas',
                     'pembelian.tanggal_pengiriman as tanggal_pengiriman',
-                )->get();
-                return response()->json([
-                    'message' => 'Data retrieved successfully',
-                    'data' => $data,
-                ]);
+                )
+                ->get();
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'data' => $data,
+            ]);
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to retrieve data',
@@ -395,7 +397,7 @@ class PegawaiController extends Controller
                     'barang.nama as nama_barang',
                     'barang.status_barang as status_barang',
                     'barang.harga as harga',
-                    'barang.foto as foto_barang',
+                    'barang.foto as foto',
                     'barang.status_barang as status_barang'
                 )
                 ->get();
@@ -473,15 +475,15 @@ class PegawaiController extends Controller
 
                 $barang = Detail_pembelian::where('id_pembelian', $pembelian->id_pembelian)->get();
                 $pembeli = Pembeli::where('id_pembeli', $pembelian->id_pembeli)->first();
-            
-                if($pembelian->metode_pengiriman == 'diantar'){
+
+                if ($pembelian->metode_pengiriman == 'diantar') {
                     $kurir = Pegawai::where('id_pegawai', $pembelian->id_pegawai)->first();
-                    if($kurir) {
+                    if ($kurir) {
                         $this->sendNotificationToKurir($kurir, 'Penjadwalan Barang', "Anda telah dijadwalkan untuk mengirim barang pada tanggal {$pembelian->tanggal_pengiriman}.Silahkan datang ke gudang untuk mengambil barang yang akan dikirim.");
                     }
                 }
                 if ($pembeli) {
-                    if($pembelian->metode_pengiriman == 'diambil'){
+                    if ($pembelian->metode_pengiriman == 'diambil') {
                         $this->sendNotificationToPembeli($pembeli, 'Penjadwalan Barang', "Transaksi dengan nomor nota {$pembelian->nomor_nota} telah dijadwalkan untuk diambil pada tanggal {$pembelian->tanggal_pengiriman}. Silahkan datang ke gudang untuk mengambil barang yang telah dibeli.");
                     }
                     $this->sendNotificationToPembeli($pembeli, 'Penjadwalan Barang', "Transaksi dengan nomor nota {$pembelian->nomor_nota} telah dijadwalkan untuk dikirim pada tanggal {$pembelian->tanggal_pengiriman}. Terima kasih telah menggunakan layanan kami.");
@@ -490,9 +492,9 @@ class PegawaiController extends Controller
                 foreach ($barang as $item) {
                     $itemBarang = Barang::with('barangPenitipan.penitipanPenitip')->where('id_barang', $item->id_barang)->first();
                     if ($itemBarang) {
-                        if($pembelian->metode_pengiriman == 'diambil'){
+                        if ($pembelian->metode_pengiriman == 'diambil') {
                             $this->sendNotificationToPenitip($itemBarang, 'Penjadwalan Barang', "Barang atas nama {$itemBarang->nama} telah dijadwalkan untuk diambil pembeli pada tanggal {$pembelian->tanggal_pengiriman}.Terima kasih telah menggunakan layanan kami.");
-                        }else{
+                        } else {
 
                             $this->sendNotificationToPenitip($itemBarang, 'Penjadwalan Barang', "Barang atas nama {$itemBarang->nama} telah dijadwalkan untuk dikirim pada tanggal {$pembelian->tanggal_pengiriman}.Terima kasih telah menggunakan layanan kami.");
                         }
@@ -530,8 +532,8 @@ class PegawaiController extends Controller
                 ->join('barang', 'detail_pembelian.id_barang', '=', 'barang.id_barang')
                 ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
                 ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
-                ->join('pegawai', 'pembelian.id_pegawai', '=', 'pegawai.id_pegawai')
-                ->join('pegawai as qc', 'penitipan.id_pegawai', '=', 'qc.id_pegawai')
+                ->leftJoin('pegawai', 'pembelian.id_pegawai', '=', 'pegawai.id_pegawai')
+                ->leftJoin('pegawai as qc', 'penitipan.id_pegawai', '=', 'qc.id_pegawai')
                 ->where('pembelian.id_pembelian', $id_pembelian)
                 ->select(
                     'pembelian.id_pembelian as id_pembelian',
@@ -558,6 +560,7 @@ class PegawaiController extends Controller
             return response()->json([
                 'message' => 'Data retrieved successfully',
                 'data' => $data,
+                'id_pegawai' => $data->nomor_nota ?? null,
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -575,6 +578,7 @@ class PegawaiController extends Controller
             ->where('detail_pembelian.id_pembelian', $id_pembelian)
             ->select(
                 'barang.id_barang',
+                'barang.nama',
                 'barang.harga',
                 'barang.id_hunter',
                 'barang.status_perpanjangan',
@@ -583,7 +587,6 @@ class PegawaiController extends Controller
             )
             ->get();
 
-        // Update barang status
         DB::table('barang')
             ->whereIn('id_barang', $barangList->pluck('id_barang'))
             ->update([
@@ -591,18 +594,15 @@ class PegawaiController extends Controller
                 'status_barang' => 'Terjual',
             ]);
 
-        // Update pembelian status
         DB::table('pembelian')
             ->where('id_pembelian', $id_pembelian)
             ->update([
                 'status_pengiriman' => 'Selesai',
             ]);
 
-        // Initialize wallet accumulators
         $walletPerPenitip = [];
         $walletPerHunter = [];
 
-        // Insert komisi rows
         foreach ($barangList as $barang) {
             $harga = $barang->harga;
             $komisi_penitip = 0;
@@ -610,7 +610,6 @@ class PegawaiController extends Controller
             $komisi_reusemart = 0;
             $bonus_penitip = 0;
 
-            // Commission logic
             if ($barang->id_hunter) {
                 if ($barang->status_perpanjangan == 0) {
                     $komisi_penitip = $harga * 0.8;
@@ -631,13 +630,16 @@ class PegawaiController extends Controller
                 }
             }
 
-            // Bonus logic
             if (Carbon::parse($barang->tanggal_masuk)->greaterThanOrEqualTo(Carbon::now()->subDays(7))) {
-                $bonus_penitip = $komisi_reusemart * 0.1;
-                $komisi_reusemart -= $bonus_penitip;
+                if ($barang->status_perpanjangan == 0) {
+
+                    $bonus_penitip = $komisi_reusemart * 0.1;
+                    $komisi_reusemart -= $bonus_penitip;
+                } else {
+                    $bonus_penitip = 0;
+                }
             }
 
-            // Insert komisi
             DB::table('komisi')->insert([
                 'id_barang' => $barang->id_barang,
                 'id_penitip' => $barang->id_penitip,
@@ -649,41 +651,77 @@ class PegawaiController extends Controller
                 'bonus_penitip' => $bonus_penitip,
             ]);
 
-            // Accumulate penitip wallet
             $walletPerPenitip[$barang->id_penitip] = ($walletPerPenitip[$barang->id_penitip] ?? 0) + ($komisi_penitip + $bonus_penitip);
 
-            // Accumulate hunter wallet (if exists)
             if ($barang->id_hunter) {
                 $walletPerHunter[$barang->id_hunter] = ($walletPerHunter[$barang->id_hunter] ?? 0) + $komisi_hunter;
             }
         }
 
-        // Update penitip wallets
         foreach ($walletPerPenitip as $id_penitip => $amount) {
             DB::table('penitip')
                 ->where('id_penitip', $id_penitip)
                 ->increment('wallet', $amount);
         }
 
-        // Update hunter wallets
         foreach ($walletPerHunter as $id_hunter => $amount) {
             DB::table('pegawai')
                 ->where('id_pegawai', $id_hunter)
                 ->increment('wallet', $amount);
         }
 
-        // Update pembeli poin
         $transaksiInfo = DB::table('pembelian')
             ->join('pembeli', 'pembelian.id_pembeli', '=', 'pembeli.id_pembeli')
             ->where('pembelian.id_pembelian', $id_pembelian)
-            ->select('pembeli.id_pembeli', 'pembelian.poin_didapat')
+            ->select(
+                'pembeli.id_pembeli',
+                'pembeli.fcm_token',
+                'pembelian.poin_didapat',
+                'pembelian.metode_pengiriman'
+            )
             ->first();
+
 
         if ($transaksiInfo) {
             DB::table('pembeli')
                 ->where('id_pembeli', $transaksiInfo->id_pembeli)
                 ->increment('poin', $transaksiInfo->poin_didapat);
+
+            if (strtolower($transaksiInfo->metode_pengiriman) === 'diambil') {
+
+                $this->sendNotificationToPembeli($transaksiInfo, 'Pesanan Telah Diambil', 'Terima kasih telah menggunakan di ReuseMart!');
+                foreach ($barangList as $barang) {
+                    $itemBarang = Barang::with('barangPenitipan.penitipanPenitip')
+                        ->where('id_barang', $barang->id_barang)
+                        ->first();
+
+                    if ($itemBarang) {
+                        $this->sendNotificationToPenitip(
+                            $itemBarang,
+                            'Barang Telah Dikirim',
+                            "Barang \"{$itemBarang->nama}\" telah dikirim ke pembeli. Terima kasih telah menggunakan layanan kami."
+                        );
+                    }
+                }
+            } else {
+                foreach ($barangList as $barang) {
+                    $itemBarang = Barang::with('barangPenitipan.penitipanPenitip')
+                        ->where('id_barang', $barang->id_barang)
+                        ->first();
+
+                    if ($itemBarang) {
+                        $this->sendNotificationToPenitip(
+                            $itemBarang,
+                            'Barang Telah Dikirim',
+                            "Barang \"{$itemBarang->nama}\" telah dikirim ke pembeli. Terima kasih telah menggunakan layanan kami."
+                        );
+                    }
+                }
+            }
+
+
         }
+
 
         return response()->json([
             'message' => 'Transaksi selesai dan semua komisi serta wallet berhasil diperbarui',
@@ -710,21 +748,21 @@ class PegawaiController extends Controller
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
             ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
-                'message' => [
-                    'token' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                    ],
-                ],
-            ]);
+                        'message' => [
+                            'token' => $user->fcm_token,
+                            'notification' => [
+                                'title' => $title,
+                                'body' => $body,
+                            ],
+                        ],
+                    ]);
 
-        
-        } 
+
+        }
     }
     private function sendNotificationToPembeli($user, $title, $body)
     {
-        
+
         if ($user && $user->fcm_token) {
             $keyFile = config('firebase.projects.app.credentials.file');
 
@@ -740,18 +778,18 @@ class PegawaiController extends Controller
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
             ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
-                'message' => [
-                    'token' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                    ],
-                ],
-            ]);
-        } 
+                        'message' => [
+                            'token' => $user->fcm_token,
+                            'notification' => [
+                                'title' => $title,
+                                'body' => $body,
+                            ],
+                        ],
+                    ]);
+        }
 
-        
-        
+
+
     }
 
     private function sendNotificationToKurir($user, $title, $body)
@@ -771,15 +809,94 @@ class PegawaiController extends Controller
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
             ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
-                'message' => [
-                    'token' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                    ],
-                ],
+                        'message' => [
+                            'token' => $user->fcm_token,
+                            'notification' => [
+                                'title' => $title,
+                                'body' => $body,
+                            ],
+                        ],
+                    ]);
+        }
+    }
+
+
+    public function fetchPenitip()
+    {
+        try {
+            $data = DB::table('penitip')
+
+                ->where('penitip.wallet', '>', 500000)
+                ->select(
+                    'penitip.id_penitip as id_penitip',
+                    'penitip.nama as nama',
+                    'penitip.email as email',
+                    'penitip.wallet as wallet',
+                )
+                ->get();
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'data' => $data,
             ]);
-        } 
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
+
+    public function fetchHunter(Request $request)
+    {
+        try {
+            $pegawai = Auth::guard('pegawai')->user();
+            return response()->json([
+                'pegawai' => $pegawai,
+                'message' => 'Data retrieved successfully',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function fetchKomisiById($id_pegawai)
+    {
+        try {
+            $komisi = DB::table('komisi')
+                ->join('barang', 'komisi.id_barang', '=', 'barang.id_barang')
+
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->join('pegawai', 'komisi.id_pegawai', '=', 'pegawai.id_pegawai')
+                ->where('komisi.id_pegawai', $id_pegawai)
+                ->select(
+                    'komisi.id_komisi as id_komisi',
+                    'komisi.komisi_hunter as komisi_hunter',
+                    'barang.nama as nama_barang',
+                    'penitip.nama as nama_penitip',
+                    'barang.harga as harga',
+                )
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Komisi retrieved successfully',
+                'data' => $komisi
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve komisi',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 }

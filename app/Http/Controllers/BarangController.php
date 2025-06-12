@@ -9,7 +9,7 @@ use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\DB;
 class BarangController extends Controller
 {
     public function index()
@@ -51,6 +51,36 @@ class BarangController extends Controller
                 'message' => 'Barang not found'
             ], 404);
         }
+    }
+
+    public function fetchBarangById($id_barang)
+    {
+        try {
+            $barang = DB::table('barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->join('kategori', 'barang.id_kategori', '=', 'kategori.id_kategori')
+                ->select('barang.*', 'penitip.nama as nama_penitip', 'kategori.nama as nama_kategori')
+                ->where('barang.id_barang', $id_barang)
+                ->first();
+
+            if ($barang) {
+                $barang->foto = asset('storage/' . $barang->foto);
+
+            }
+            return response()->json([
+                'status' => true,
+                'message' => 'Data Barang',
+                'data' => $barang
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve Barang',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+
     }
 
 
@@ -212,11 +242,11 @@ class BarangController extends Controller
             ->where('status_barang', 'tersedia')
             ->get();
 
-            $barangs = $barangs->map(function ($barang) {
-                $barang->foto = asset('storage/' . $barang->foto);
-                return $barang;
-            });
-    
+        $barangs = $barangs->map(function ($barang) {
+            $barang->foto = asset('storage/' . $barang->foto);
+            return $barang;
+        });
+
 
         return response()->json([
             'status' => true,
@@ -326,7 +356,7 @@ class BarangController extends Controller
 
     public function getPenitip($id)
     {
-        try{
+        try {
             $barang = Barang::find($id);
             if (!$barang) {
                 return response()->json([
@@ -350,11 +380,12 @@ class BarangController extends Controller
         }
     }
 
-    public function updateStatusBarangDonasi(){
-        try{
+    public function updateStatusBarangDonasi()
+    {
+        try {
             $barangs = Barang::where('batas_ambil', '<', Carbon::now())
-            ->where('status_barang', 'tersedia')
-            ->get();
+                ->where('status_barang', 'tersedia')
+                ->get();
 
             foreach ($barangs as $barang) {
                 $barang->status_barang = 'barang untuk donasi';

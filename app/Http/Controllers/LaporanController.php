@@ -286,35 +286,35 @@ class LaporanController extends Controller
             $idPenitipan = $komisi->map(function ($item) {
                 return $item->komisiBarang->id_penitipan;
             })->filter()->unique()->values();
-    
+
             $idBarang = $komisi->map(function ($item) {
                 return $item->komisiBarang->id_barang;
             })->filter()->unique()->values();
-    
+
             $penitipan = Penitipan::whereIn('id_penitipan', $idPenitipan)->get();
             $detailPembelian = Detail_pembelian::whereIn('id_barang', $idBarang)->get();
-    
+
             $pembelian = Pembelian::whereIn('id_pembelian', $detailPembelian->pluck('id_pembelian'))
                 ->whereMonth('tanggal_laku', now()->month)
                 ->whereYear('tanggal_laku', now()->year)
                 ->get();
-    
+
             $data = $komisi->map(function ($item) use ($penitipan, $detailPembelian, $pembelian) {
                 $barang = optional($item->komisiBarang);
                 $detail = $detailPembelian->where('id_barang', $barang->id_barang)->first();
                 $pembelianItem = $detail ? $pembelian->where('id_pembelian', $detail->id_pembelian)->first() : null;
                 $penitipanItem = $penitipan->where('id_penitipan', $barang->id_penitipan)->first();
-    
+
                 return [
                     'kode_produk' => $barang->id_barang ?? '-',
                     'nama_produk' => $barang->nama ?? 'Produk Tidak Diketahui',
                     'harga_jual' => $barang->harga ?? 0,
                     'tanggal_masuk' => $penitipanItem->tanggal_masuk
-                    ? date('d/m/Y', strtotime( $penitipanItem->tanggal_masuk))
-                    : '-',
+                        ? date('d/m/Y', strtotime($penitipanItem->tanggal_masuk))
+                        : '-',
                     'tanggal_laku' => $pembelianItem->tanggal_laku
-                    ? date('d/m/Y', strtotime($pembelianItem->tanggal_laku))
-                    : '-',
+                        ? date('d/m/Y', strtotime($pembelianItem->tanggal_laku))
+                        : '-',
                     'komisi_hunter' => $item->komisi_hunter ?? 0,
                     'komisi_reusemart' => $item->komisi_reusemart ?? 0,
                     'bonus_penitip' => $item->bonus_penitip ?? 0,
@@ -346,38 +346,38 @@ class LaporanController extends Controller
 
         foreach (range(1, 12) as $bulan) {
             $totalBarangTerjualPerBulan[$bulan] = $barangTerjual->filter(function ($barang) use ($bulan, $year) {
-            $tanggalLaku = null;
-            if ($barang->detailpem && $barang->detailpem->count() > 0) {
-                foreach ($barang->detailpem as $detail) {
-                if ($detail->pembelian && $detail->pembelian->tanggal_laku) {
-                    $bulanLaku = (int)date('m', strtotime($detail->pembelian->tanggal_laku));
-                    $tahunLaku = (int)date('Y', strtotime($detail->pembelian->tanggal_laku));
-                    if ($bulanLaku === $bulan && $tahunLaku === $year) {
-                    $tanggalLaku = $detail->pembelian->tanggal_laku;
-                    break;
+                $tanggalLaku = null;
+                if ($barang->detailpem && $barang->detailpem->count() > 0) {
+                    foreach ($barang->detailpem as $detail) {
+                        if ($detail->pembelian && $detail->pembelian->tanggal_laku) {
+                            $bulanLaku = (int) date('m', strtotime($detail->pembelian->tanggal_laku));
+                            $tahunLaku = (int) date('Y', strtotime($detail->pembelian->tanggal_laku));
+                            if ($bulanLaku === $bulan && $tahunLaku === $year) {
+                                $tanggalLaku = $detail->pembelian->tanggal_laku;
+                                break;
+                            }
+                        }
                     }
                 }
-                }
-            }
-            return $tanggalLaku && (int)date('m', strtotime($tanggalLaku)) === $bulan && (int)date('Y', strtotime($tanggalLaku)) === $year;
+                return $tanggalLaku && (int) date('m', strtotime($tanggalLaku)) === $bulan && (int) date('Y', strtotime($tanggalLaku)) === $year;
             })->count();
 
             $totalPenjualanPerBulan[$bulan] = $barangTerjual->filter(function ($barang) use ($bulan, $year) {
-            $tanggalLaku = null;
-            $harga = 0;
-            if ($barang->detailpem && $barang->detailpem->count() > 0) {
-                foreach ($barang->detailpem as $detail) {
-                if ($detail->pembelian && $detail->pembelian->tanggal_laku) {
-                    $bulanLaku = (int)date('m', strtotime($detail->pembelian->tanggal_laku));
-                    $tahunLaku = (int)date('Y', strtotime($detail->pembelian->tanggal_laku));
-                    if ($bulanLaku === $bulan && $tahunLaku === $year) {
-                    $tanggalLaku = $detail->pembelian->tanggal_laku;
-                    break;
+                $tanggalLaku = null;
+                $harga = 0;
+                if ($barang->detailpem && $barang->detailpem->count() > 0) {
+                    foreach ($barang->detailpem as $detail) {
+                        if ($detail->pembelian && $detail->pembelian->tanggal_laku) {
+                            $bulanLaku = (int) date('m', strtotime($detail->pembelian->tanggal_laku));
+                            $tahunLaku = (int) date('Y', strtotime($detail->pembelian->tanggal_laku));
+                            if ($bulanLaku === $bulan && $tahunLaku === $year) {
+                                $tanggalLaku = $detail->pembelian->tanggal_laku;
+                                break;
+                            }
+                        }
                     }
                 }
-                }
-            }
-            return $tanggalLaku && (int)date('m', strtotime($tanggalLaku)) === $bulan && (int)date('Y', strtotime($tanggalLaku)) === $year;
+                return $tanggalLaku && (int) date('m', strtotime($tanggalLaku)) === $bulan && (int) date('Y', strtotime($tanggalLaku)) === $year;
             })->sum('harga');
         }
 
@@ -409,8 +409,8 @@ class LaporanController extends Controller
             \Log::error('Browsershot failed: ' . $e->getMessage());
             return back()->with('error', 'Gagal menghasilkan chart: ' . $e->getMessage());
         }
-        
-    
+
+
         $data = [
             'penjualanData' => $penjualanData,
             'chartImagePath' => $chartImagePath,
@@ -475,6 +475,77 @@ class LaporanController extends Controller
         HTML;
 
         return $html;
-    }    
+    }
+
+
+    public function fetchDataLaporanBarangHabis()
+    {
+        try {
+            $data = DB::table('barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->where('barang.tanggal_akhir', '<', Carbon::today())
+                ->select('barang.*', 'penitip.id_penitip', 'penitip.nama as nama_penitip')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve komisi',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
+    public function fetchDataLaporanPenjualanKategori()
+    {
+        try {
+            $currentYear = Carbon::now()->year;
+
+            $data = DB::table('kategori')
+                ->leftJoin('barang', 'kategori.id_kategori', '=', 'barang.id_kategori')
+                ->leftJoin('detail_pembelian', 'barang.id_barang', '=', 'detail_pembelian.id_barang')
+                ->leftJoin('pembelian', 'detail_pembelian.id_pembelian', '=', 'pembelian.id_pembelian')
+                ->where('barang.status_barang', '!=', 'tersedia')
+                ->select(
+                    'kategori.id_kategori',
+                    'kategori.nama',
+                    DB::raw("SUM(CASE 
+                            WHEN barang.status_barang IN ('terjual', 'didonasikan') 
+                                 AND YEAR(pembelian.tanggal_laku) = $currentYear 
+                            THEN 1 ELSE 0 END) as jumlah_terjual"),
+                    DB::raw("SUM(CASE 
+                            WHEN (barang.status_barang NOT IN ('terjual', 'didonasikan') 
+                                AND YEAR(barang.tanggal_ambil) = $currentYear 
+                                )
+                            THEN 1 ELSE 0 END) as jumlah_gagal"),
+
+                )
+                ->groupBy('kategori.id_kategori', 'kategori.nama')
+                ->orderBy('kategori.id_kategori')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }
 

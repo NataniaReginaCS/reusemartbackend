@@ -16,6 +16,7 @@ class Merchandise extends Model
 
     protected $fillable = [
         'nama_merchandise',
+        'foto',
         'deskripsi',
         'poin',
         'stok'
