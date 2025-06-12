@@ -97,6 +97,13 @@ class TransaksiPembelianController extends Controller
 
 
             foreach ($keranjang as $item) {
+                $barang = Barang::find($item->id_barang);
+                if (!$barang) {
+                    return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+                }
+                $barang->status_barang = 'sold out';
+                $barang->save();
+                
                 $detailPembelian = Detail_pembelian::create([
                     'id_pembelian' => $pembelian->id_pembelian,
                     'id_barang' => $item->id_barang,

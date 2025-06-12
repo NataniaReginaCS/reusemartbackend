@@ -11,6 +11,8 @@ use App\Models\Detail_penitipan;
 use App\Models\Komisi;
 use App\Models\Detail_pembelian;
 use App\Models\Pembelian;
+use App\Models\Request_donasi;
+use App\Models\Organisasi;
 use Exception;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Spatie\Browsershot\Browsershot;
@@ -22,6 +24,218 @@ use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
+    public function fetchAllPenitip(){
+        try{
+            $penitip = Penitip::all();
+            if($penitip->isEmpty()){
+                return response()->json(['message' => 'No penitip data found'], 404);
+            }
+            return response()->json([
+                'message' => 'Berhasil mengambil data penitip',
+                'data' => $penitip,
+            ], 200);
+        }catch(Exception $e){
+            Log::error('Error fetchAllPenitip: '.$e->getMessage());
+            return response()->json(['error' => 'Gagal mengambil data penitip: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function downloadLaporanTransaksiPenitip($id_penitip, $bulan, $tahun){
+        try{
+            Log::info('Memulai downloadLaporanTransaksiPenitip', [
+            'id_penitip' => $id_penitip,
+            'bulan' => $bulan,
+            'tahun' => $tahun
+        ]);
+            $penitip = Penitip::find($id_penitip);
+            if (!$penitip) {
+            Log::warning('Penitip tidak ditemukan', ['id_penitip' => $id_penitip]);
+            return response()->json(['error' => 'Penitip tidak ditemukan'], 404);
+        }
+            Log::info('Penitip data:', ['penitip' => $penitip ? $penitip->toArray() : null]);
+            $komisi = DB::table('komisi')
+            ->join('barang', 'komisi.id_barang', '=', 'barang.id_barang')
+            ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+            ->join('detail_pembelian', 'komisi.id_barang', '=', 'detail_pembelian.id_barang')
+            ->join('pembelian', 'detail_pembelian.id_pembelian', '=', 'pembelian.id_pembelian')
+            ->where('komisi.id_penitip', $id_penitip)
+            ->whereMonth('pembelian.tanggal_laku', $bulan)
+            ->whereYear('pembelian.tanggal_laku', $tahun)
+                ->select(
+                    'barang.id_barang as id_barang',
+                    'barang.nama as nama_barang',
+                    'penitipan.tanggal_masuk as tanggal_masuk',
+                    'pembelian.tanggal_lunas as tanggal_lunas',
+                    'komisi.komisi_penitip as komisi_penitip',
+                    'komisi.bonus_penitip as bonus_penitip',
+                    
+                )
+                ->get();
+                Log::info('Komisi data:', ['komisi' => $komisi->toArray()]);
+                $totalHargaJual = $komisi->sum('komisi_penitip');
+                $totalBonus = $komisi->sum('bonus_penitip');
+                $totalPendapatan = $komisi->sum(function($item) {
+                    return ($item->komisi_penitip ?? 0) + ($item->bonus_penitip ?? 0);
+                });
+                $data = $komisi->map(function ($item) {
+                return [
+                    'kode_barang' => $item->id_barang ?? "-",
+                    'nama_barang' => $item->nama_barang ?? 'Produk Tidak Diketahui',
+                    'tanggal_masuk' => $item->tanggal_masuk
+                        ? date('d/m/Y', strtotime($item->tanggal_masuk))
+                        : '-',
+                    'tanggal_lunas' => $item->tanggal_lunas
+                        ? date('d/m/Y', strtotime($item->tanggal_lunas))
+                        : '-',
+                    'komisi_penitip' => $item->komisi_penitip ?? 0,
+                    'bonus_penitip' => $item->bonus_penitip ?? 0,
+                    'pendapatan' => ($item->komisi_penitip ?? 0) + ($item->bonus_penitip ?? 0),
+                ];
+            })->toArray();
+            Log::debug('Mapped data:', ['data' => $data]);
+            $pdf = PDF::loadView('laporan.transaksi_penitip', [
+                'data' => $data,
+                'bulan' => $bulan ? date('F', mktime(0, 0, 0, $bulan, 1)) : '-',
+                'tahun' =>$tahun ?? '-',
+                'id_penitip' => $id_penitip,
+                'nama_penitip' => $penitip ? $penitip->nama : '-',
+                'tanggal_cetak' => now()->format('d F Y'),
+                'totalHargaJual' => $totalHargaJual,
+                'totalBonus' => $totalBonus,
+                'totalPendapatan' => $totalPendapatan,
+            ]);
+            Log::info('PDF rendering selesai');
+
+            Log::info('Data Laporan TransaksiPenitip:', ['data' => $data]);
+            return $pdf->download('Laporan_Transaksi_Penitip_' . now()->format('Y-m-d') . '.pdf');
+        }catch(Exception $e){
+            Log::error('Error downloadTransaksiPenitip: '.$e->getMessage());
+            return response()->json(['error' => 'Gagal menghasilkan laporan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function downloadLaporanRequestDonasi(){
+        try{
+            $organisasi = DB::table('organisasi')->join('request_donasi', 'organisasi.id_organisasi', '=', 'request_donasi.id_organisasi')
+                ->select(
+                    'organisasi.id_organisasi as id_organisasi',
+                    'organisasi.nama as nama_organisasi',
+                    'organisasi.alamat as alamat_organisasi',
+                    'request_donasi.deskripsi as request'
+                )->where('request_donasi.status_terpenuhi', '!=' , '0')->get();
+                $data = $organisasi->map(function ($item) {
+                return [
+                    'id_organisasi' => $item->id_organisasi ?? '-',
+                    'nama_organisasi' => $item->nama_organisasi ?? '-',
+                    'alamat_organisasi' => $item->alamat_organisasi ?? '-',
+                    'request' => $item->request ?? '-',
+                ];
+            })->toArray();
+            $pdf = PDF::loadView('laporan.request_donasi', [
+                'data' => $data,
+                'tanggal_cetak' => now()->format('d F Y'),
+            ]);
+
+            Log::info('Data Laporan Donasi Barang:', ['data' => $data]);
+            return $pdf->download('Laporan_Donasi_Barang_' . now()->format('Y-m-d') . '.pdf');
+        }catch(Exception $e){
+            Log::error('Error downloadLaporanRequstDonasi: '.$e->getMessage());
+            return response()->json(['error' => 'Gagal menghasilkan laporan: ' . $e->getMessage()], 500);
+        }
+    }
+    public function downloadLaporanDonasiBarang(){
+        try{
+            $barang = DB::table('barang')
+                ->join('detail_donasi', 'barang.id_barang', '=', 'detail_donasi.id_barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->join('request_donasi', 'detail_donasi.id_request', '=', 'request_donasi.id_request')
+                ->join('organisasi', 'request_donasi.id_organisasi', '=', 'organisasi.id_organisasi')
+                ->where('barang.status_barang', 'didonasikan')
+                ->select(
+                    'barang.id_barang as id_barang',
+                    'barang.nama as nama',
+                    'penitip.id_penitip as id_penitip',
+                    'penitip.nama as nama_penitip',
+                    'detail_donasi.tanggal_donasi as tanggal_donasi',
+                    'detail_donasi.nama_penerima as nama_penerima',
+                    'organisasi.nama as nama_organisasi',
+                )
+                ->get();
+            $data = $barang->map(function ($item) {
+                return [
+                    'kode_barang' => $item->id_barang ?? "-",
+                    'nama_barang' => $item->nama ?? 'Produk Tidak Diketahui',
+                    'id_penitip' => $item->id_penitip ?? '-',
+                    'nama_penitip' => $item->nama_penitip ?? '-',
+                    'tanggal_donasi' => $item->tanggal_donasi
+                        ? date('d/m/Y', strtotime($item->tanggal_donasi))
+                        : '-',
+                    'nama_penerima' => $item->nama_penerima ?? '-',
+                    'nama_organisasi' => $item->nama_organisasi ?? '-',
+                ];
+            })->toArray();
+            $pdf = PDF::loadView('laporan.donasi_barang', [
+                'data' => $data,
+                'tanggal_cetak' => now()->format('d F Y'),
+            ]);
+
+            Log::info('Data Laporan Donasi Barang:', ['data' => $data]);
+            return $pdf->download('Laporan_Donasi_Barang_' . now()->format('Y-m-d') . '.pdf');
+        }catch(Exception $e){
+            Log::error('Error downloadLaporanDonasiBarang: '.$e->getMessage());
+            return response()->json(['error' => 'Gagal menghasilkan laporan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function downloadLaporanDonasiBarangElektronik(){
+        try{
+            $barang = DB::table('barang')
+                ->join('detail_donasi', 'barang.id_barang', '=', 'detail_donasi.id_barang')
+                ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
+                ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
+                ->join('request_donasi', 'detail_donasi.id_request', '=', 'request_donasi.id_request')
+                ->join('organisasi', 'request_donasi.id_organisasi', '=', 'organisasi.id_organisasi')
+                ->join('kategori', 'barang.id_kategori', '=', 'kategori.id_kategori')
+                ->where('kategori.id_kategori' ,'<', '10')
+                ->where('barang.status_barang', 'didonasikan')
+                ->select(
+                    'barang.id_barang as id_barang',
+                    'barang.nama as nama',
+                    'penitip.id_penitip as id_penitip',
+                    'penitip.nama as nama_penitip',
+                    'detail_donasi.tanggal_donasi as tanggal_donasi',
+                    'detail_donasi.nama_penerima as nama_penerima',
+                    'organisasi.nama as nama_organisasi',
+                    'kategori.nama as nama_kategori'
+                )
+                ->get();
+            $data = $barang->map(function ($item) {
+                return [
+                    'kode_barang' => $item->id_barang ?? "-",
+                    'nama_barang' => $item->nama ?? 'Produk Tidak Diketahui',
+                    'id_penitip' => $item->id_penitip ?? '-',
+                    'nama_penitip' => $item->nama_penitip ?? '-',
+                    'tanggal_donasi' => $item->tanggal_donasi
+                        ? date('d/m/Y', strtotime($item->tanggal_donasi))
+                        : '-',
+                    'nama_penerima' => $item->nama_penerima ?? '-',
+                    'nama_organisasi' => $item->nama_organisasi ?? '-',
+                    'nama_kategori' => $item->nama_kategori ?? '-',
+                ];
+            })->toArray();
+            $pdf = PDF::loadView('laporan.donasi_barang_elektronik', [
+                'data' => $data,
+                'tanggal_cetak' => now()->format('d F Y'),
+            ]);
+
+            Log::info('Data Laporan Donasi Barang:', ['data' => $data]);
+            return $pdf->download('Laporan_Donasi_Barang_' . now()->format('Y-m-d') . '.pdf');
+        }catch(Exception $e){
+            Log::error('Error downloadLaporanDonasiBarang: '.$e->getMessage());
+            return response()->json(['error' => 'Gagal menghasilkan laporan: ' . $e->getMessage()], 500);
+        }
+    }
     public function downloadLaporanStokGudang()
     {
         try {

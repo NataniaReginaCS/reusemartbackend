@@ -220,10 +220,27 @@ Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
     Route::get('/fetchBarangForDonasi', [Detail_donasiController::class, 'fetchBarangForDonasi']);
     Route::get('/fetchAllBarang', [Detail_donasiController::class, 'fetchAllBarang']);
 
+    //
+    Route::get('/getAllPenitip', [LaporanController::class, 'fetchAllPenitip']);
+
     //Laporan
     Route::get('/laporan/stok-gudang/download', [LaporanController::class, 'downloadLaporanStokGudang']);
     Route::get('/laporan/komisi-bulanan/download', [LaporanController::class, 'downloadLaporanKomisiBulanan']);
     Route::get('/laporan/penjualan-bulanan/download', [LaporanController::class, 'downloadLaporanPenjualanBulanan']);
+    Route::get('/laporan/donasi-barang/download', [LaporanController::class, 'downloadLaporanDonasiBarang']);
+    Route::get('/laporan/request-donasi/download', [LaporanController::class, 'downloadLaporanRequestDonasi']);
+    Route::get('/laporan/transaksi-penitip/download/{id_penitip}/{bulan}/{tahun}', [LaporanController::class, 'downloadLaporanTransaksiPenitip']);
+    Route::get('/laporan/donasi-elektronik/download', [LaporanController::class, 'downloadLaporanDonasiBarangElektronik']);
+});
+
+
+Route::middleware(['auth:sanctum', KurirMiddleware::class])->group(function () {
+    // Pengiriman
+    Route::get('/fetchPegawaiByLogin', [PegawaiController::class, 'fetchPegawaiByLogin']);
+    Route::get('/jadwalPengirimanKurir', [PegawaiController::class, 'getJadwalPengirimanKurir']);
+    Route::get('/historyPengirimanKurir', [PegawaiController::class, 'getHistoryPengirimanKurir']);
+    Route::post('/selesaikanPengirimanKurir/{id}', [PegawaiController::class, 'selesaikanPengiriman']);
+
     Route::get('/laporanBarangHabis', [LaporanController::class, 'fetchDataLaporanBarangHabis']);
     Route::get('/laporanBarangTerjual', [LaporanController::class, 'fetchDataLaporanPenjualanKategori']);
 });

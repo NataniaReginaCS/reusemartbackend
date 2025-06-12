@@ -29,6 +29,121 @@ use Carbon\Carbon;
 
 class PegawaiController extends Controller
 {
+    public function fetchPegawaiByLogin(Request $request)
+    {
+        try {
+            $pegawai = Auth::guard('pegawai')->user();
+            return response()->json([
+                'pegawai' => $pegawai,
+                'message' => 'Data retrieved successfully',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function selesaikanPengiriman($id_pembelian){
+        try{
+            $pembelian = Pembelian::findOrFail($id_pembelian);
+            
+            $pembelian->status_pengiriman = 'selesai';
+            $pembelian->save();
+
+            $barang = Detail_pembelian::where('id_pembelian', $id_pembelian)->get();
+            foreach ($barang as $item) {
+                $itemBarang = Barang::findOrFail($item->id_barang);
+                if ($itemBarang) {        
+                    $this->sendNotificationToPenitip($itemBarang, 'Pengiriman selesai', "Barang atas nama {$itemBarang->nama} telah sampai di pembeli. Terima kasih telah menggunakan layanan kami.");
+                }
+                $itemBarang->status_barang = 'terjual';
+                $itemBarang->save();
+            }
+            $pembeli = Pembeli::where('id_pembeli', $pembelian->id_pembeli)->first();
+            if ($pembeli) {
+                $this->sendNotificationToPembeli($pembeli, 'Pengiriman Selesai', "Kurir sudah sampai. Terima kasih telah menggunakan layanan kami.");
+            }
+            
+            
+            return response()->json([
+                'message' => 'Pengiriman selesai',
+                'pembelian' => $pembelian,
+            ]);
+
+        }catch(Exception $e){
+            return response()->json([
+                'message' => 'Failed to complete delivery',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getHistoryPengirimanKurir(){
+        $kurir = Auth::guard('pegawai')->user();
+        try{
+            $history = DB::table('pembelian')
+                ->where('pembelian.metode_pengiriman', 'diantar')
+                ->where('pembelian.status_pengiriman',   '=', 'selesai')
+                ->where('pembelian.id_pegawai', $kurir->id_pegawai)
+                ->join('pembeli', 'pembelian.id_pembeli', '=', 'pembeli.id_pembeli')
+                ->join('alamat', 'pembelian.id_alamat', '=', 'alamat.id_alamat')
+                ->select(
+                    'pembelian.id_pembelian as id_pembelian',
+                    'pembelian.tanggal_pengiriman as tanggal_pengiriman',
+                    'pembelian.status_pengiriman as status_pengiriman',
+                    'pembelian.metode_pengiriman as metode_pengiriman',
+                    'pembeli.nama as nama_pembeli',
+                    'alamat.nama_jalan as nama_jalan',
+                    'pembelian.nomor_nota as nomor_nota'
+                )
+                ->get();
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'jadwal' => $history,
+            ]);
+        }catch(Exception $e){
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getJadwalPengirimanKurir(){
+        $kurir = Auth::guard('pegawai')->user();
+        try {
+            $jadwalPengiriman = DB::table('pembelian')
+                ->where('pembelian.metode_pengiriman', 'diantar')
+                ->where('pembelian.status_pengiriman',   '!=', 'Selesai')
+                ->where('pembelian.status_pembayaran', '!=', 'batal')
+                ->where('pembelian.id_pegawai', $kurir->id_pegawai)
+                ->join('pembeli', 'pembelian.id_pembeli', '=', 'pembeli.id_pembeli')
+                ->join('alamat', 'pembelian.id_alamat', '=', 'alamat.id_alamat')
+                ->select(
+                    'pembelian.id_pembelian as id_pembelian',
+                    'pembelian.tanggal_pengiriman as tanggal_pengiriman',
+                    'pembelian.status_pengiriman as status_pengiriman',
+                    'pembelian.metode_pengiriman as metode_pengiriman',
+                    'pembeli.nama as nama_pembeli',
+                    'alamat.nama_jalan as nama_jalan',
+                    'pembelian.nomor_nota as nomor_nota'
+                    
+                )
+                ->get();
+            return response()->json([
+                'message' => 'Data retrieved successfully',
+                'jadwal' => $jadwalPengiriman,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function addPegawai(Request $request)
     {
         try {
@@ -351,7 +466,6 @@ class PegawaiController extends Controller
         $validatedData = $request->validate([
             'id_pegawai' => 'sometimes|required|integer|exists:pegawai,id_pegawai',
             'tanggal_pengiriman' => 'sometimes|required|date',
-
         ]);
 
         try {

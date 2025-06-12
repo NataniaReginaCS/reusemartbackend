@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function ($schedule) {
         $schedule->command('pembelian:batalkan-expired')->everySecond();
         $schedule->command('penitipan:check-expiry')->everyMinute();
+        $schedule->command('pengiriman:kirim-notifikasi')->everyMinute();
     })
     ->withMiddleware(function (Middleware $middleware) {
         //
