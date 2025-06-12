@@ -66,6 +66,7 @@ class PegawaiController extends Controller
                 $this->sendNotificationToPembeli($pembeli, 'Pengiriman Selesai', "Kurir sudah sampai. Terima kasih telah menggunakan layanan kami.");
             }
             
+            
             return response()->json([
                 'message' => 'Pengiriman selesai',
                 'pembelian' => $pembelian,
@@ -95,6 +96,7 @@ class PegawaiController extends Controller
                     'pembelian.metode_pengiriman as metode_pengiriman',
                     'pembeli.nama as nama_pembeli',
                     'alamat.nama_jalan as nama_jalan',
+                    'pembelian.nomor_nota as nomor_nota'
                 )
                 ->get();
             return response()->json([
@@ -126,6 +128,8 @@ class PegawaiController extends Controller
                     'pembelian.metode_pengiriman as metode_pengiriman',
                     'pembeli.nama as nama_pembeli',
                     'alamat.nama_jalan as nama_jalan',
+                    'pembelian.nomor_nota as nomor_nota'
+                    
                 )
                 ->get();
             return response()->json([
