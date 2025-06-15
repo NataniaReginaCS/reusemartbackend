@@ -6,23 +6,28 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            font-size: 12px;
         }
 
-        .header {
-            margin-bottom: 20px;
-        }
-
-        .table {
+        table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
 
-        .table th,
-        .table td {
-            border: 1px solid black;
+        th,
+        td {
+            border: 1px solid #000;
             padding: 5px;
             text-align: left;
+        }
+
+        th {
+            background-color: #2_clear: both;
+        }
+
+        .laporan {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -31,7 +36,8 @@
     <div style="border: 1px solid #000; padding: 20px;">
         <h3>ReUse Mart</h3>
         <p>JL. Green Eco Park No. 456 Yogyakarta</p>
-        <h3>LAPORAN PENJUALAN BULANAN</h3>
+        <br />
+        <h3 class="laporan">LAPORAN PENJUALAN BULANAN</h3>
         <p>Tahun : {{ $year }}</p>
         <p>Tanggal cetak : {{ $tanggal_cetak }}</p>
         <table class="table">
@@ -50,6 +56,10 @@
                         <td>{{ number_format($data['sales'], 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
+                <tr>
+                    <td colspan="2" style="text-align: right;"><strong>Total </strong></td>
+                    <td>{{ number_format($jumlahKotor, 0, ',', '.') }}</td>
+                </tr>
             </tbody>
         </table>
     </div>

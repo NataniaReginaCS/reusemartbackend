@@ -87,7 +87,9 @@ class CheckPenitipanExpiry extends Command
     public function handle()
     {
         $today = Carbon::today('Asia/Jakarta');
-        $barangs = Barang::whereNotNull('tanggal_akhir')->get();
+        $barangs = Barang::whereNotNull('tanggal_akhir')
+        ->where('status_barang', 'tersedia')
+        ->get();
 
         foreach ($barangs as $barang) {
             $endDate = Carbon::parse($barang->tanggal_akhir, 'Asia/Jakarta');

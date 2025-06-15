@@ -462,6 +462,7 @@ class PenitipController extends Controller
             $bulan = Carbon::now()->subMonth()->month;
             $tahun = Carbon::now()->year;
 
+            $getSebelumnya = Penitip::where('badges', true)->first();
             $initPenitip = Penitip::all();
             foreach ($initPenitip as $penitip) {
                 $penitip->badges = false;
@@ -473,7 +474,7 @@ class PenitipController extends Controller
                 ->join('barang', 'penitipan.id_penitipan', '=', 'barang.id_penitipan')
                 ->join('detail_pembelian', 'barang.id_barang', '=', 'detail_pembelian.id_barang')
                 ->join('pembelian', 'detail_pembelian.id_pembelian', '=', 'pembelian.id_pembelian')
-                ->where('barang.status_barang', 'Sold Out')
+                ->where('barang.status_barang', 'sold out')
                 ->whereMonth('pembelian.tanggal_laku', $bulan)
                 ->whereYear('pembelian.tanggal_laku', $tahun)
                 ->when(request('order') === 'asc', function ($query) {
@@ -492,12 +493,16 @@ class PenitipController extends Controller
                 ->limit(1)
                 ->get();
 
-            if ($topSeller->isNotEmpty()) {
-                $penitip = Penitip::find($topSeller[0]->id_penitip);
-                $penitip->badges = true;
-                $penitip->save();
-            }
-
+                if ($topSeller->isNotEmpty()) {
+                    $penitip = Penitip::find($topSeller[0]->id_penitip);
+                    $penitip->badges = true;
+                    if($getSebelumnya->id_penitip != $topSeller[0]->id_penitip){
+                        $bonusBadges = 0.01 * $topSeller[0]->total_penjualan;
+                        $penitip->poin += $bonusBadges;
+                    }
+                    $penitip->save();
+                }
+            
             return response()->json([
                 'message' => 'Data retrieved successfully',
                 'penitip' => $topSeller,
@@ -534,6 +539,8 @@ class PenitipController extends Controller
                 ->first();
 
             $bonusBadges = 0.01 * $totalPenjualan->total_penjualan;
+            $penitip->poin += $bonusBadges;
+            $penitip->save();
             $totalKeuntungan = $totalPenjualan->total_penjualan + $bonusBadges;
             return response()->json([
                 'message' => 'Data retrieved successfully',
