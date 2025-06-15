@@ -27,8 +27,9 @@ use Illuminate\Support\Facades\Http;
 class TransaksiPembelianController extends Controller
 {
 
-    public function checkout(Request $request){
-        try{
+    public function checkout(Request $request)
+    {
+        try {
 
             $IdPembeli = auth('pembeli')->user()->id_pembeli;
 
@@ -36,39 +37,39 @@ class TransaksiPembelianController extends Controller
             if ($pembelian) {
                 return response()->json(['message' => 'Anda sudah melakukan pembelian, selesaikan pembelian sebelumnya terlebih dahulu'], 400);
             }
-            
-            $keranjang = Keranjang::where('id_pembeli', $IdPembeli)->get(); 
+
+            $keranjang = Keranjang::where('id_pembeli', $IdPembeli)->get();
             if ($keranjang->isEmpty()) {
                 return response()->json(['message' => 'Keranjang kosong.'], 400);
             }
-            
+
             $totalBarang = 0;
             foreach ($keranjang as $item) {
                 $totalBarang += $item->barang->harga;
             }
-            
+
             $poinDigunakan = $request->poin_digunakan ?? 0;
             $diskonPoin = $poinDigunakan * 100;
-            
+
             // Hitung poin didapat
             $poinDasar = floor($totalBarang / 10000);
             $poinBonus = $totalBarang > 500000 ? floor($poinDasar * 0.2) : 0;
             $poinDidapat = $poinDasar + $poinBonus;
-            
+
             // Hitung ongkir otomatis
             $ongkir = 0;
             if ($request->metode_pengiriman === 'diantar') {
                 $ongkir = $totalBarang > 1500000 ? 0 : 100000;
             }
-            
+
             // Hitung total akhir
             $totalAkhir = $totalBarang + $ongkir - $diskonPoin;
-            
+
             // Generate nomor nota (format: tahun.bulan.urutan)
             $count = Pembelian::count() + 1;
             $now = Carbon::now();
             $nomorNota = $now->format('y') . '.' . $now->format('m') . '.' . $count;
-            
+
             // Kurangi poin dari user jika cukup
             $pembeli = Pembeli::find($IdPembeli);
             if ($pembeli->poin < $poinDigunakan) {
@@ -76,7 +77,7 @@ class TransaksiPembelianController extends Controller
             }
             $pembeli->poin -= $poinDigunakan;
             $pembeli->save();
-            
+
             // Buat pembelian baru
             $pembelian = Pembelian::create([
                 'id_pembeli' => $IdPembeli,
@@ -86,29 +87,36 @@ class TransaksiPembelianController extends Controller
                 'status_pembayaran' => 'menunggu pembayaran',
                 'status_pengiriman' => $request->status_pengiriman, // ambil_sendiri / diantar
                 'metode_pengiriman' => $request->metode_pengiriman,
-                
+
                 'ongkir' => $ongkir,
                 'poin_digunakan' => $poinDigunakan,
                 'poin_didapat' => $poinDidapat,
                 'total' => $totalAkhir,
                 'nomor_nota' => $nomorNota,
             ]);
-            
-            
+
+
             foreach ($keranjang as $item) {
+                $barang = Barang::find($item->id_barang);
+                if (!$barang) {
+                    return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+                }
+                $barang->status_barang = 'sold out';
+                $barang->save();
+                
                 $detailPembelian = Detail_pembelian::create([
                     'id_pembelian' => $pembelian->id_pembelian,
                     'id_barang' => $item->id_barang,
                 ]);
                 $item->delete();
-                
+
             }
-            
+
             return response()->json([
                 'message' => 'Checkout berhasil',
                 'pembelian' => $pembelian,
             ]);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Checkout gagal',
                 'error' => $e->getMessage(),
@@ -117,9 +125,10 @@ class TransaksiPembelianController extends Controller
         }
     }
 
-    public function getOnGoingPembelian($nomor_nota){
+    public function getOnGoingPembelian($nomor_nota)
+    {
         $pembeli = auth('pembeli')->user();
-        $pembelian = Pembelian::where('nomor_nota', $nomor_nota)->where('id_pembeli', $pembeli->id_pembeli )->first();
+        $pembelian = Pembelian::where('nomor_nota', $nomor_nota)->where('id_pembeli', $pembeli->id_pembeli)->first();
         if (!$pembelian) {
             return response()->json(['message' => 'Pembelian tidak ditemukan'], 404);
         }
@@ -127,10 +136,11 @@ class TransaksiPembelianController extends Controller
             'pembelian' => $pembelian,
         ]);
     }
-    
-    public function addBuktiPembayaran(Request $request , $nomor_nota){
+
+    public function addBuktiPembayaran(Request $request, $nomor_nota)
+    {
         $pembeli = auth('pembeli')->user();
-        $pembelian = Pembelian::where('nomor_nota', $nomor_nota)->where('id_pembeli', $pembeli->id_pembeli )->first();
+        $pembelian = Pembelian::where('nomor_nota', $nomor_nota)->where('id_pembeli', $pembeli->id_pembeli)->first();
         if (!$pembelian) {
             return response()->json(['message' => 'Pembelian tidak ditemukan'], 404);
         }
@@ -139,11 +149,11 @@ class TransaksiPembelianController extends Controller
         foreach ($detailPembelian as $item) {
             $barang = Barang::find($item->id_barang);
             if ($barang) {
-            $barang->status_barang = 'sold out';
-            $barang->save();
+                $barang->status_barang = 'terjual';
+                $barang->save();
             }
         }
-        
+
         if ($request->hasFile('bukti_pembayaran')) {
             $file = $request->file('bukti_pembayaran');
             $filePath = $file->store('images/bukti_pembayaran', 'public');
@@ -161,22 +171,23 @@ class TransaksiPembelianController extends Controller
         }
     }
 
-    public function getUnverifiedPayment(){
-        try{
+    public function getUnverifiedPayment()
+    {
+        try {
             $pembelian = DB::table('pembelian')
                 ->join('pembeli', 'pembelian.id_pembeli', '=', 'pembeli.id_pembeli')
                 ->select('pembelian.*', 'pembeli.nama as nama_pembeli')
                 ->where('pembelian.status_pembayaran', 'menunggu verifikasi')
                 ->get();
-            
+
             if ($pembelian->isEmpty()) {
                 return response()->json(['message' => 'Tidak ada pembelian yang belum diverifikasi'], 404);
             }
-    
+
             $pembelian = $pembelian->map(function ($item) {
                 // Assuming bukti_pembayaran stores the filename or a path like "images/bukti_pembayaran/filename.png"
-                $item->bukti_pembayaran = $item->bukti_pembayaran 
-                    ? asset('storage/images/bukti_pembayaran/' . basename($item->bukti_pembayaran)) 
+                $item->bukti_pembayaran = $item->bukti_pembayaran
+                    ? asset('storage/images/bukti_pembayaran/' . basename($item->bukti_pembayaran))
                     : null;
                 return $item;
             });
@@ -185,7 +196,7 @@ class TransaksiPembelianController extends Controller
                 'message' => 'Berhasil mendapatkan pembelian',
                 'pembelian' => $pembelian,
             ]);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Gagal mendapatkan pembelian',
                 'error' => $e->getMessage(),
@@ -193,13 +204,14 @@ class TransaksiPembelianController extends Controller
         }
     }
 
-    public function verifyPayment($nomor_nota){
-        try{
+    public function verifyPayment($nomor_nota)
+    {
+        try {
             $pembelian = Pembelian::where('nomor_nota', $nomor_nota)->first();
             if (!$pembelian) {
                 return response()->json(['message' => 'Pembelian tidak ditemukan'], 404);
             }
-            
+
             $barang = Detail_pembelian::where('id_pembelian', $pembelian->id_pembelian)->get();
             foreach ($barang as $item) {
                 $itemBarang = Barang::with('barangPenitipan.penitipanPenitip')->where('id_barang', $item->id_barang)->first();
@@ -207,14 +219,14 @@ class TransaksiPembelianController extends Controller
                     $this->sendNotification($itemBarang, 'Pembayaran Diterima', "Pembayaran untuk barang {$itemBarang->nama} yang anda titipkan telah diterima. Terima kasih telah menggunakan layanan kami.");
                 }
             }
-            
+
             $pembelian->status_pembayaran = 'lunas';
             $pembelian->status_pengiriman = 'disiapkan';
             $pembelian->save();
 
             return response()->json(['message' => 'Pembayaran berhasil diverifikasi'], 200);
-            
-        }catch(\Exception $e){
+
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Gagal memverifikasi pembayaran',
                 'error' => $e->getMessage(),
@@ -222,36 +234,37 @@ class TransaksiPembelianController extends Controller
         }
     }
 
-    public function declinePayment($nomor_nota){
-        try{
+    public function declinePayment($nomor_nota)
+    {
+        try {
             $pembelian = Pembelian::where('nomor_nota', $nomor_nota)->first();
             if (!$pembelian) {
                 return response()->json(['message' => 'Pembelian tidak ditemukan'], 404);
             }
-            
-            
+
+
             $pembeli = Pembeli::find($pembelian->id_pembeli);
             $pembeli->poin += $pembelian->poin_digunakan;
             $pembeli->save();
-            
+
             $detailPembelian = Detail_pembelian::where('id_pembelian', $pembelian->id_pembelian)->get();
             foreach ($detailPembelian as $item) {
                 $barang = Barang::find($item->id_barang);
                 if ($barang) {
-                $barang->status_barang = 'tersedia';
-                $barang->save();
+                    $barang->status_barang = 'tersedia';
+                    $barang->save();
                 }
             }
-        
+
             if ($pembelian->bukti_pembayaran) {
                 Storage::disk('public')->delete($pembelian->bukti_pembayaran);
             }
-            
+
             $pembelian->status_pembayaran = 'batal';
             $pembelian->save();
-            
+
             return response()->json(['message' => 'Pembayaran berhasil ditolak'], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Gagal menolak pembayaran',
                 'error' => $e->getMessage(),
@@ -278,16 +291,16 @@ class TransaksiPembelianController extends Controller
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
             ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
-                'message' => [
-                    'token' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                    ],
-                ],
-            ]);
+                        'message' => [
+                            'token' => $user->fcm_token,
+                            'notification' => [
+                                'title' => $title,
+                                'body' => $body,
+                            ],
+                        ],
+                    ]);
 
-        
-        } 
+
+        }
     }
 }

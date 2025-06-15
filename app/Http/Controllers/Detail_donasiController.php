@@ -14,18 +14,21 @@ use App\Models\Penitip;
 use App\Http\Controllers\PenitipController;
 use App\Http\Controllers\PenitipanController;
 use Exception;
+use Google\Auth\Credentials\ServiceAccountCredentials;
+use Illuminate\Support\Facades\Http;
 
 class Detail_donasiController extends Controller
 {
-    public function fetchRequest(){
-        try{
+    public function fetchRequest()
+    {
+        try {
             $request_donasi = Request_donasi::all();
             return response()->json([
                 'status' => true,
                 'message' => 'Data Request Donasi',
                 'data' => $request_donasi
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Gagal mengambil data request donasi',
@@ -37,7 +40,7 @@ class Detail_donasiController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'id_request' => 'required|integer', 
+            'id_request' => 'required|integer',
             'id_barang' => 'required|integer',
             'tanggal_donasi' => 'required|date',
             'nama_penerima' => 'required|string'
@@ -54,7 +57,7 @@ class Detail_donasiController extends Controller
             $barang->save();
 
             $request_donasi = Request_donasi::findOrFail($validatedData['id_request']);
-            $request_donasi->status_terpenuhi = 1; 
+            $request_donasi->status_terpenuhi = 1;
             $request_donasi->save();
             $poin_reward = (int) floor($barang->harga / 10000);
 
@@ -67,6 +70,7 @@ class Detail_donasiController extends Controller
             $penitip = Penitip::where('id_penitip', $penitipan->id_penitip)->first();
             $penitip->poin = $penitip->poin + $poin_reward;
             $penitip->save();
+            $this->sendNotificationToPenitip($barang, 'Donasi Barang Berhasil', "Barang '{$barang->nama}' Anda telah berhasil didonasikan. Anda mendapat {$poin_reward} poin. Terima kasih telah berbagi!");
 
             return response()->json([
                 'status' => true,
@@ -83,7 +87,41 @@ class Detail_donasiController extends Controller
     }
 
 
-    public function updateDonasi(Request $request, $id){
+
+    private function sendNotificationToPenitip($barang, $title, $body)
+    {
+        $user = $barang->barangPenitipan?->penitipanPenitip;
+
+        if ($user && $user->fcm_token) {
+            $keyFile = config('firebase.projects.app.credentials.file');
+
+            $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+
+            $credentials = new ServiceAccountCredentials($scopes, $keyFile);
+
+            $token = $credentials->fetchAuthToken()['access_token'];
+
+            $projectId = 'reusemart-a150d';
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+                        'message' => [
+                            'token' => $user->fcm_token,
+                            'notification' => [
+                                'title' => $title,
+                                'body' => $body,
+                            ],
+                        ],
+                    ]);
+
+
+        }
+    }
+
+    public function updateDonasi(Request $request, $id)
+    {
         $validatedData = $request->validate([
             'tanggal_donasi' => 'required|date',
             'nama_penerima' => 'required|string',
@@ -92,8 +130,8 @@ class Detail_donasiController extends Controller
             'nama_penerima.required' => 'Nama Penerima is required',
         ]);
 
-        try{
-            
+        try {
+
             $detail_donasi = Detail_donasi::findOrFail($id);
             $detail_donasi->update($validatedData);
 
@@ -102,7 +140,7 @@ class Detail_donasiController extends Controller
                 'message' => 'Detail Donasi updated successfully',
                 'data' => $detail_donasi
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Gagal memperbarui detail donasi',
@@ -111,15 +149,16 @@ class Detail_donasiController extends Controller
         }
     }
 
-    public function showOrganisasi(){
-        try{
+    public function showOrganisasi()
+    {
+        try {
             $organisasi = Organisasi::all();
             return response()->json([
                 'status' => true,
                 'message' => 'Data Organisasi',
                 'data' => $organisasi
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Gagal mengambil data organisasi',
@@ -127,10 +166,11 @@ class Detail_donasiController extends Controller
             ], 500);
         }
     }
-    
-    public function historyDonasibyOrganisasi($id){
-        try{
-            $detail_donasi = Detail_donasi::whereHas('dtDonasiReqDonasi', function($query) use ($id){
+
+    public function historyDonasibyOrganisasi($id)
+    {
+        try {
+            $detail_donasi = Detail_donasi::whereHas('dtDonasiReqDonasi', function ($query) use ($id) {
                 $query->where('id_organisasi', $id);
             })->get();
 
@@ -139,7 +179,7 @@ class Detail_donasiController extends Controller
                 'message' => 'History Donasi by Organisasi',
                 'data' => $detail_donasi
             ]);
-        } catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Gagal mengambil history donasi',
@@ -148,15 +188,16 @@ class Detail_donasiController extends Controller
         }
     }
 
-    public function fetchDetailDonasi(){
-        try{
+    public function fetchDetailDonasi()
+    {
+        try {
             $detail_donasi = Detail_donasi::with('dtDonasiReqDonasi')->get();
             return response()->json([
                 'status' => true,
                 'message' => 'Data Detail Donasi',
                 'data' => $detail_donasi
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Gagal mengambil data detail donasi',
@@ -165,10 +206,11 @@ class Detail_donasiController extends Controller
         }
     }
 
-    public function fetchBarangForDonasi(){
+    public function fetchBarangForDonasi()
+    {
         try {
             $barangs = Barang::where('batas_ambil', '>=', Carbon::now()->addDay())
-            ->where('status_barang', '!=', 'sold out')->get();
+                ->where('status_barang', '!=', 'sold out')->get();
             return response()->json([
                 'status' => true,
                 'message' => 'Data Barang',
@@ -183,7 +225,8 @@ class Detail_donasiController extends Controller
         }
     }
 
-    public function fetchAllBarang(){
+    public function fetchAllBarang()
+    {
         try {
             $barang = Barang::all();
             return response()->json([
@@ -199,5 +242,5 @@ class Detail_donasiController extends Controller
             ], 500);
         }
     }
-    
+
 }

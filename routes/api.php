@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MerchandiseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Request_donasiController;
@@ -63,6 +64,7 @@ Route::get('/showBarangbyKategori/{id_kategori}', [BarangController::class, 'sho
 Route::get('/relatedProducts/{id_kategori}', [BarangController::class, 'relatedProducts']);
 Route::get('/fetchBarang', [BarangController::class, 'index']);
 Route::get('/showBarang/{id}', [BarangController::class, 'show']);
+Route::get('/fetchBarangById/{id}', [BarangController::class, 'fetchBarangById']);
 Route::post('/searchBarang', [BarangController::class, 'searchBarang']);
 Route::get('/showBarangIsGaransi', [BarangController::class, 'showBarangIsGaransi']);
 Route::get('/showBarangIsNotGaransi', [BarangController::class, 'showBarangIsNotGaransi']);
@@ -84,7 +86,7 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::post('/editAlamat/{id}', [AlamatController::class, 'updateAlamat']);
     Route::delete('/deleteAlamat/{id}', [AlamatController::class, 'deleteAlamat']);
     Route::post('/setUtama/{id}', [AlamatController::class, 'setUtama']);
-    
+
     //Keranjang 
     Route::post('/addToKeranjang/{id}', [KeranjangController::class, 'addToKeranjang']);
     Route::get('/fetchKeranjang', [KeranjangController::class, 'fetchKeranjang']);
@@ -95,13 +97,21 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     //Checkout
     Route::get('/getOngoingPembelian/{nomor_nota}', [TransaksiPembelianController::class, 'getOngoingPembelian']);
     Route::post('/addBuktiPembayaran/{nomor_nota}', [TransaksiPembelianController::class, 'addBuktiPembayaran']);
-    
+
+
+
     //Rating
     Route::post('/createRating', [RatingController::class, 'createRating']);
     Route::get('/getRating/{id_barang}', [RatingController::class, 'getRating']);
     Route::get('/fetchRating', [RatingController::class, 'fetchRating']);
 
     //Mobile Profile
+
+
+    //Merchandise
+    Route::get('/fetchMerchandise', [MerchandiseController::class, 'fetchMerchandise']);
+    Route::post('/claimMerchandise/{id}', [MerchandiseController::class, 'claimMerchandise']);
+    Route::get('/fetchMerchandiseById/{id}', [MerchandiseController::class, 'fetchMerchandiseById']);
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {
@@ -125,7 +135,6 @@ Route::middleware(['auth:sanctum', OrganisasiMiddleware::class])->group(function
         Route::put('/{id}', [Request_donasiController::class, 'update']);
         Route::put('/{id}/alokasi', [Request_donasiController::class, 'alokasi']);
         Route::delete('/{id}', [Request_donasiController::class, 'destroy']);
-        
         Route::get('/search', [Request_donasiController::class, 'search']);
         Route::get('/filterByDate', [Request_donasiController::class, 'filterByDate']);
         Route::get('/filterByStatus', [Request_donasiController::class, 'filterByStatus']);
@@ -139,7 +148,6 @@ Route::middleware(['auth:sanctum', CSMiddleware::class])->group(function () {
     Route::post('/updatePenitip/{id}', [PenitipController::class, 'updatePenitip']);
     Route::delete('/deletePenitip/{id}', [PenitipController::class, 'deletePenitip']);
     Route::get('/fetchDiskusiCS', [DiskusiController::class, 'fetchDiskusiCS']);
-
     //Verifikasi
     Route::get('/getUnverifiedPayment', [TransaksiPembelianController::class, 'getUnverifiedPayment']);
     Route::post('/verifyPayment/{nomor_nota}', [TransaksiPembelianController::class, 'verifyPayment']);
@@ -162,6 +170,8 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
     Route::put('/updateTanggalPengiriman/{id}', [PegawaiController::class, 'update']);
     Route::get('/fetchDataPembelian/{id}', [PegawaiController::class, 'fetchDataPembelian']);
     Route::get('/fetchDataPegawai', [PegawaiController::class, 'fetchDataPegawai']);
+    Route::get('/fetchDataNota/{id}', [PegawaiController::class, 'fetchDataNota']);
+    Route::put('/selesaiTransaksi/{id}', [PegawaiController::class, 'selesaiTransaksi']);
 
 });
 
@@ -181,26 +191,20 @@ Route::middleware(['auth:sanctum', GudangMiddleware::class])->group(function () 
     Route::get('/fetchPegawaiPenitipan', [PenitipanController::class, 'fetchPegawaiPenitipan']);
     Route::post('/updateOnlyPenitipan/{id}', [PenitipanController::class, 'updatePenitipan']);
     Route::post('/storeBarang/{id}', [PenitipanController::class, 'storeBarang']);
+    Route::get('/fetchShowPenitip', [PegawaiController::class, 'fetchPenitip']);
 });
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
     Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
-
     Route::get('/fetchPegawai', [PegawaiController::class, 'index']);
     Route::post('/updatePegawai/{id}', [PegawaiController::class, 'updatePegawai']);
     Route::delete('/deletePegawai/{id}', [PegawaiController::class, 'deletePegawai']);
     Route::post('/addPegawai', [PegawaiController::class, 'addPegawai']);
     Route::get('/searchPegawai', [PegawaiController::class, 'searchPegawai']);
-
     Route::get('/fetchOrganisasi', [OrganisasiController::class, 'fetchOrganisasi']);
-
     Route::post('/updateOrganisasi/{id}', [OrganisasiController::class, 'updateOrganisasi']);
     Route::delete('/deleteOrganisasi/{id}', [OrganisasiController::class, 'deleteOrganisasi']);
-
-    Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
-
-
     Route::post('/resetPassword/{id}', [PegawaiController::class, 'resetPasswordPegawai']);
 
 });
@@ -216,11 +220,35 @@ Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
     Route::get('/fetchBarangForDonasi', [Detail_donasiController::class, 'fetchBarangForDonasi']);
     Route::get('/fetchAllBarang', [Detail_donasiController::class, 'fetchAllBarang']);
 
+    //
+    Route::get('/getAllPenitip', [LaporanController::class, 'fetchAllPenitip']);
+
     //Laporan
     Route::get('/laporan/stok-gudang/download', [LaporanController::class, 'downloadLaporanStokGudang']);
     Route::get('/laporan/komisi-bulanan/download', [LaporanController::class, 'downloadLaporanKomisiBulanan']);
     Route::get('/laporan/penjualan-bulanan/download', [LaporanController::class, 'downloadLaporanPenjualanBulanan']);
+    Route::get('/laporan/donasi-barang/download', [LaporanController::class, 'downloadLaporanDonasiBarang']);
+    Route::get('/laporan/request-donasi/download', [LaporanController::class, 'downloadLaporanRequestDonasi']);
+    Route::get('/laporan/transaksi-penitip/download/{id_penitip}/{bulan}/{tahun}', [LaporanController::class, 'downloadLaporanTransaksiPenitip']);
+    Route::get('/laporan/donasi-elektronik/download', [LaporanController::class, 'downloadLaporanDonasiBarangElektronik']);
+});
+
+
+Route::middleware(['auth:sanctum', KurirMiddleware::class])->group(function () {
+    // Pengiriman
+    Route::get('/fetchPegawaiByLogin', [PegawaiController::class, 'fetchPegawaiByLogin']);
+    Route::get('/jadwalPengirimanKurir', [PegawaiController::class, 'getJadwalPengirimanKurir']);
+    Route::get('/historyPengirimanKurir', [PegawaiController::class, 'getHistoryPengirimanKurir']);
+    Route::post('/selesaikanPengirimanKurir/{id}', [PegawaiController::class, 'selesaikanPengiriman']);
+
+    Route::get('/laporanBarangHabis', [LaporanController::class, 'fetchDataLaporanBarangHabis']);
+    Route::get('/laporanBarangTerjual', [LaporanController::class, 'fetchDataLaporanPenjualanKategori']);
 });
 
 
 
+
+Route::middleware(['auth:sanctum', HunterMiddleware::class])->group(function () {
+    Route::get('/fetchHunter', [PegawaiController::class, 'fetchHunter']);
+    Route::get('/fetchKomisiById/{id}', [PegawaiController::class, 'fetchKomisiById']);
+});
