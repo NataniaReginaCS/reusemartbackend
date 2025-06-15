@@ -58,62 +58,80 @@ class LaporanController extends Controller
         }
     }
 
-    public function downloadLaporanKomisiBulanan()
+    public function downloadLaporanKomisiBulanan(Request $request)
     {
         try {
+            $bulan = (int) $request->input('month', now()->month);
+            $tahun = (int) $request->input('year', now()->year);
+
             $komisi = Komisi::with(['komisiPenitip', 'komisiBarang', 'komisiPegawai'])
-                ->whereHas('komisiBarang.detailpem.pembelian', function ($query) {
-                    $query->whereMonth('tanggal_laku', now()->month)
-                        ->whereYear('tanggal_laku', now()->year);
+                ->whereHas('komisiBarang.detailpem.pembelian', function ($query) use ($bulan, $tahun) {
+                    $query->whereMonth('tanggal_laku', $bulan)
+                        ->whereYear('tanggal_laku', $tahun);
                 })
                 ->get();
-            \Log::info('Data Komisi:', ['komisi' => $komisi]);
+
             $idPenitipan = $komisi->map(function ($item) {
                 return $item->komisiBarang->id_penitipan;
             })->filter()->unique()->values();
-    
+
             $idBarang = $komisi->map(function ($item) {
                 return $item->komisiBarang->id_barang;
             })->filter()->unique()->values();
-    
+
             $penitipan = Penitipan::whereIn('id_penitipan', $idPenitipan)->get();
             $detailPembelian = Detail_pembelian::whereIn('id_barang', $idBarang)->get();
-    
+
             $pembelian = Pembelian::whereIn('id_pembelian', $detailPembelian->pluck('id_pembelian'))
-                ->whereMonth('tanggal_laku', now()->month)
-                ->whereYear('tanggal_laku', now()->year)
+                ->whereMonth('tanggal_laku', $bulan)
+                ->whereYear('tanggal_laku', $tahun)
                 ->get();
-    
+
             $data = $komisi->map(function ($item) use ($penitipan, $detailPembelian, $pembelian) {
                 $barang = optional($item->komisiBarang);
                 $detail = $detailPembelian->where('id_barang', $barang->id_barang)->first();
                 $pembelianItem = $detail ? $pembelian->where('id_pembelian', $detail->id_pembelian)->first() : null;
                 $penitipanItem = $penitipan->where('id_penitipan', $barang->id_penitipan)->first();
-    
+
                 return [
                     'kode_produk' => $barang->id_barang ?? '-',
                     'nama_produk' => $barang->nama ?? 'Produk Tidak Diketahui',
                     'harga_jual' => $barang->harga ?? 0,
-                    'tanggal_masuk' => $penitipanItem->tanggal_masuk
-                    ? date('d/m/Y', strtotime( $penitipanItem->tanggal_masuk))
-                    : '-',
-                    'tanggal_laku' => $pembelianItem->tanggal_laku
-                    ? date('d/m/Y', strtotime($pembelianItem->tanggal_laku))
-                    : '-',
+                    'tanggal_masuk' => $penitipanItem && $penitipanItem->tanggal_masuk
+                        ? date('d/m/Y', strtotime($penitipanItem->tanggal_masuk))
+                        : '-',
+                    'tanggal_laku' => $pembelianItem && $pembelianItem->tanggal_laku
+                        ? date('d/m/Y', strtotime($pembelianItem->tanggal_laku))
+                        : '-',
                     'komisi_hunter' => $item->komisi_hunter ?? 0,
                     'komisi_reusemart' => $item->komisi_reusemart ?? 0,
                     'bonus_penitip' => $item->bonus_penitip ?? 0,
                 ];
             })->toArray();
 
+            $totalKomisiHunter = 0;
+            $totalKomisiReusemart = 0;
+            $totalBonusPenitip = 0;
+            $totalHargaJual = 0;
+            foreach ($data as $key => $item) {
+                $totalKomisiHunter += $item['komisi_hunter'];
+                $totalKomisiReusemart += $item['komisi_reusemart'];
+                $totalBonusPenitip += $item['bonus_penitip'];
+                $totalHargaJual += $item['harga_jual'];
+            }
+
             $pdf = PDF::loadView('laporan.komisi_bulanan', [
                 'data' => $data,
                 'tanggal_cetak' => now()->format('d F Y'),
-                'bulan' => now()->format('F'),
-                'tahun' => now()->year,
+                'bulan' => \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F'),
+                'tahun' => $tahun,
+                'totalKomisiHunter' => $totalKomisiHunter ?? 0,
+                'totalKomisiReusemart' => $totalKomisiReusemart ?? 0,
+                'totalBonusPenitip' => $totalBonusPenitip ?? 0,
+                'totalHargaJual' => $totalHargaJual ?? 0,
             ]);
 
-            return $pdf->download('Laporan_Komisi_Bulanan_' . now()->format('Y-m-d') . '.pdf');
+            return $pdf->download('Laporan_Komisi_Bulanan_' . $tahun . '_' . $bulan . '.pdf');
         } catch (Exception $e) {
             return response()->json(['error' => 'Gagal menghasilkan laporan: ' . $e->getMessage()], 500);
         }
@@ -121,7 +139,7 @@ class LaporanController extends Controller
 
     public function downloadLaporanPenjualanBulanan()
     {
-        $barangTerjual = Barang::where('status_barang', 'terjual')
+        $barangTerjual = Barang::where('status_barang', 'sold out')
             ->with('detailpem.pembelian')
             ->get();
 
@@ -131,38 +149,37 @@ class LaporanController extends Controller
 
         foreach (range(1, 12) as $bulan) {
             $totalBarangTerjualPerBulan[$bulan] = $barangTerjual->filter(function ($barang) use ($bulan, $year) {
-            $tanggalLaku = null;
-            if ($barang->detailpem && $barang->detailpem->count() > 0) {
-                foreach ($barang->detailpem as $detail) {
-                if ($detail->pembelian && $detail->pembelian->tanggal_laku) {
-                    $bulanLaku = (int)date('m', strtotime($detail->pembelian->tanggal_laku));
-                    $tahunLaku = (int)date('Y', strtotime($detail->pembelian->tanggal_laku));
-                    if ($bulanLaku === $bulan && $tahunLaku === $year) {
-                    $tanggalLaku = $detail->pembelian->tanggal_laku;
-                    break;
+                $tanggalLaku = null;
+                if ($barang->detailpem && $barang->detailpem->count() > 0) {
+                    foreach ($barang->detailpem as $detail) {
+                        if ($detail->pembelian && $detail->pembelian->tanggal_laku) {
+                            $bulanLaku = (int)date('m', strtotime($detail->pembelian->tanggal_laku));
+                            $tahunLaku = (int)date('Y', strtotime($detail->pembelian->tanggal_laku));
+                            if ($bulanLaku === $bulan && $tahunLaku === $year) {
+                                $tanggalLaku = $detail->pembelian->tanggal_laku;
+                                break;
+                            }
+                        }
                     }
                 }
-                }
-            }
-            return $tanggalLaku && (int)date('m', strtotime($tanggalLaku)) === $bulan && (int)date('Y', strtotime($tanggalLaku)) === $year;
+                return $tanggalLaku && (int)date('m', strtotime($tanggalLaku)) === $bulan && (int)date('Y', strtotime($tanggalLaku)) === $year;
             })->count();
 
             $totalPenjualanPerBulan[$bulan] = $barangTerjual->filter(function ($barang) use ($bulan, $year) {
-            $tanggalLaku = null;
-            $harga = 0;
-            if ($barang->detailpem && $barang->detailpem->count() > 0) {
-                foreach ($barang->detailpem as $detail) {
-                if ($detail->pembelian && $detail->pembelian->tanggal_laku) {
-                    $bulanLaku = (int)date('m', strtotime($detail->pembelian->tanggal_laku));
-                    $tahunLaku = (int)date('Y', strtotime($detail->pembelian->tanggal_laku));
-                    if ($bulanLaku === $bulan && $tahunLaku === $year) {
-                    $tanggalLaku = $detail->pembelian->tanggal_laku;
-                    break;
+                $tanggalLaku = null;
+                if ($barang->detailpem && $barang->detailpem->count() > 0) {
+                    foreach ($barang->detailpem as $detail) {
+                        if ($detail->pembelian && $detail->pembelian->tanggal_laku) {
+                            $bulanLaku = (int)date('m', strtotime($detail->pembelian->tanggal_laku));
+                            $tahunLaku = (int)date('Y', strtotime($detail->pembelian->tanggal_laku));
+                            if ($bulanLaku === $bulan && $tahunLaku === $year) {
+                                $tanggalLaku = $detail->pembelian->tanggal_laku;
+                                break;
+                            }
+                        }
                     }
                 }
-                }
-            }
-            return $tanggalLaku && (int)date('m', strtotime($tanggalLaku)) === $bulan && (int)date('Y', strtotime($tanggalLaku)) === $year;
+                return $tanggalLaku && (int)date('m', strtotime($tanggalLaku)) === $bulan && (int)date('Y', strtotime($tanggalLaku)) === $year;
             })->sum('harga');
         }
 
@@ -181,6 +198,8 @@ class LaporanController extends Controller
             ['month' => 'Desember', 'sales' => $totalPenjualanPerBulan[12] ?? 0, 'items' => $totalBarangTerjualPerBulan[12] ?? 0],
         ];
 
+        $jumlahKotor = array_sum($totalPenjualanPerBulan);
+
         $chartHTML = $this->generateChartHTML($penjualanData);
         $chartImagePath = public_path('charts/sales-chart.png');
 
@@ -195,12 +214,12 @@ class LaporanController extends Controller
             return back()->with('error', 'Gagal menghasilkan chart: ' . $e->getMessage());
         }
         
-    
         $data = [
             'penjualanData' => $penjualanData,
             'chartImagePath' => $chartImagePath,
             'year' => now()->year,
             'tanggal_cetak' => now()->format('d F Y'),
+            'jumlahKotor' => $jumlahKotor,
         ];
         $pdf = Pdf::loadView('laporan.penjualan_bulanan', $data);
         return $pdf->download('Laporan_Penjualan_Bulanan_' . now()->format('Y-m-d') . '.pdf');
