@@ -351,12 +351,13 @@ class PegawaiController extends Controller
         try {
             $data = DB::table('pembelian')
                 ->where(function ($query) {
-                    $query->where('pembelian.metode_pengiriman', 'Diambil')
-                        ->orWhere('pembelian.metode_pengiriman', 'Diantar');
+                    $query->where('pembelian.metode_pengiriman', 'diambil')
+                        ->orWhere('pembelian.metode_pengiriman', 'diantar');
 
                 })
-                ->where('pembelian.status_pengiriman', '!=', 'Selesai')
-                ->where('pembelian.status_pengiriman', '!=', 'Hangus')
+                ->where('pembelian.status_pengiriman', '!=', 'selesai')
+                ->where('pembelian.status_pengiriman', '!=', 'hangus')
+                ->where('pembelian.status_pembayaran', '=', 'lunas' )
                 ->select(
                     'pembelian.id_pembelian as id_pembelian',
                     'pembelian.status_pengiriman as status_pengiriman',
@@ -590,14 +591,14 @@ class PegawaiController extends Controller
         DB::table('barang')
             ->whereIn('id_barang', $barangList->pluck('id_barang'))
             ->update([
-                'status_transaksi' => 'Selesai',
-                'status_barang' => 'Terjual',
+                'status_transaksi' => 'selesai',
+                'status_barang' => 'terjual',
             ]);
 
         DB::table('pembelian')
             ->where('id_pembelian', $id_pembelian)
             ->update([
-                'status_pengiriman' => 'Selesai',
+                'status_pengiriman' => 'selesai',
             ]);
 
         $walletPerPenitip = [];

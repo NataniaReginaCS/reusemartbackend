@@ -198,7 +198,7 @@ class LaporanController extends Controller
                 ->join('organisasi', 'request_donasi.id_organisasi', '=', 'organisasi.id_organisasi')
                 ->join('kategori', 'barang.id_kategori', '=', 'kategori.id_kategori')
                 ->where('kategori.id_kategori' ,'<', '10')
-                ->where('barang.status_barang', 'didonasikan')
+                ->where('barang.status_barang', 'donasi')
                 ->select(
                     'barang.id_barang as id_barang',
                     'barang.nama as nama',
@@ -241,6 +241,7 @@ class LaporanController extends Controller
         try {
             $barang = Barang::with(['barangPenitipan.penitipanPenitip', 'barangPenitipan.penitipanPegawai'])
                 ->where('status_barang', 'tersedia')
+                ->where('tanggal_akhir', '>', now())
                 ->get();
 
             if ($barang->isEmpty()) {
@@ -355,7 +356,7 @@ class LaporanController extends Controller
 
     public function downloadLaporanPenjualanBulanan()
     {
-        $barangTerjual = Barang::where('status_barang', 'sold out')
+        $barangTerjual = Barang::where('status_barang', 'terjual')
             ->with('detailpem.pembelian')
             ->get();
 
@@ -538,11 +539,11 @@ class LaporanController extends Controller
                     'kategori.id_kategori',
                     'kategori.nama',
                     DB::raw("SUM(CASE 
-                            WHEN barang.status_barang IN ('terjual', 'didonasikan') 
+                            WHEN barang.status_barang IN ('terjual', 'donasi') 
                                  AND YEAR(pembelian.tanggal_laku) = $currentYear 
                             THEN 1 ELSE 0 END) as jumlah_terjual"),
                     DB::raw("SUM(CASE 
-                            WHEN (barang.status_barang NOT IN ('terjual', 'didonasikan') 
+                            WHEN (barang.status_barang NOT IN ('terjual', 'donasi') 
                                 AND YEAR(barang.tanggal_ambil) = $currentYear 
                                 )
                             THEN 1 ELSE 0 END) as jumlah_gagal"),

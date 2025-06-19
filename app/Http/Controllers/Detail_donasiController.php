@@ -16,6 +16,7 @@ use App\Http\Controllers\PenitipanController;
 use Exception;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 class Detail_donasiController extends Controller
 {
@@ -53,7 +54,7 @@ class Detail_donasiController extends Controller
 
         try {
             $barang = Barang::findOrFail($validatedData['id_barang']);
-            $barang->status_barang = 'donasi';
+            $barang->status_barang = 'didonasikan';
             $barang->save();
 
             $request_donasi = Request_donasi::findOrFail($validatedData['id_request']);
@@ -209,8 +210,8 @@ class Detail_donasiController extends Controller
     public function fetchBarangForDonasi()
     {
         try {
-            $barangs = Barang::where('batas_ambil', '>=', Carbon::now()->addDay())
-                ->where('status_barang', '!=', 'sold out')->get();
+            $barang = Barang::where('tanggal_akhir', '<=', Carbon::now()->addDay())
+                ->where('status_barang', '!=', 'terjual')->get();
             return response()->json([
                 'status' => true,
                 'message' => 'Data Barang',

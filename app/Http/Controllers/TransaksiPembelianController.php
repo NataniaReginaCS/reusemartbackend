@@ -101,7 +101,7 @@ class TransaksiPembelianController extends Controller
                 if (!$barang) {
                     return response()->json(['message' => 'Barang tidak ditemukan'], 404);
                 }
-                $barang->status_barang = 'sold out';
+                $barang->status_barang = 'terjual';
                 $barang->save();
                 
                 $detailPembelian = Detail_pembelian::create([
