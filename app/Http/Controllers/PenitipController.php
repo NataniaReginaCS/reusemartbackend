@@ -295,15 +295,15 @@ class PenitipController extends Controller
                 ->whereDate('tanggal_akhir', '<', $today)
                 ->update(['status_barang' => 'Belum Diambil']);
 
-            Barang::whereNot('status_barang', 'Didonasikan')
+            Barang::whereNot('status_barang', 'didonasikan')
                 ->whereDate('batas_ambil', '<', $today)
-                ->update(['status_barang' => 'Didonasikan']);
+                ->update(['status_barang' => 'didonasikan']);
 
             $data = DB::table('barang')
                 ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
                 ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
                 ->where('penitip.id_penitip', $idPenitip)
-                ->where('barang.status_barang', '!=', 'Sold Out')
+                ->where('barang.status_barang', '!=', 'terjual')
                 ->select(
                     'barang.id_barang as id_barang',
                     'barang.nama as nama_barang',
@@ -420,7 +420,7 @@ class PenitipController extends Controller
 
         if ($tanggalAkhir->toDateString() < Carbon::now()->toDateString()) {
             $detailTransaksi->update([
-                'status_barang' => 'Hangus',
+                'status_barang' => 'hangus',
             ]);
             return response()->json([
                 'message' => 'Barang Sudah Hangus',
@@ -474,7 +474,7 @@ class PenitipController extends Controller
                 ->join('barang', 'penitipan.id_penitipan', '=', 'barang.id_penitipan')
                 ->join('detail_pembelian', 'barang.id_barang', '=', 'detail_pembelian.id_barang')
                 ->join('pembelian', 'detail_pembelian.id_pembelian', '=', 'pembelian.id_pembelian')
-                ->where('barang.status_barang', 'sold out')
+                ->where('barang.status_barang', 'terjual')
                 ->whereMonth('pembelian.tanggal_laku', $bulan)
                 ->whereYear('pembelian.tanggal_laku', $tahun)
                 ->when(request('order') === 'asc', function ($query) {
@@ -531,7 +531,7 @@ class PenitipController extends Controller
                     $join->on('barang.id_barang', '=', 'komisi.id_barang')
                         ->whereColumn('komisi.id_penitip', '=', 'penitip.id_penitip');
                 })
-                ->where('barang.status_barang', 'sold out')
+                ->where('barang.status_barang', 'terjual')
                 ->where('penitip.id_penitip', $penitip->id_penitip)
                 ->whereMonth('pembelian.tanggal_laku', $month)
                 ->whereYear('pembelian.tanggal_laku', $year)

@@ -62,6 +62,8 @@ Route::post('/registerOrganisasi', [AuthController::class, 'registerOrganisasi']
 Route::get('/fetchKategori', [KategoriController::class, 'fetchKategori']);
 Route::get('/showBarangbyKategori/{id_kategori}', [BarangController::class, 'showBarangbyKategori']);
 Route::get('/relatedProducts/{id_kategori}', [BarangController::class, 'relatedProducts']);
+
+//Menampilkan informasi Barang Detail Barang
 Route::get('/fetchBarang', [BarangController::class, 'index']);
 Route::get('/showBarang/{id}', [BarangController::class, 'show']);
 Route::get('/fetchBarangById/{id}', [BarangController::class, 'fetchBarangById']);
@@ -231,6 +233,8 @@ Route::middleware(['auth:sanctum', OwnerMiddleware::class])->group(function () {
     Route::get('/laporan/request-donasi/download', [LaporanController::class, 'downloadLaporanRequestDonasi']);
     Route::get('/laporan/transaksi-penitip/download/{id_penitip}/{bulan}/{tahun}', [LaporanController::class, 'downloadLaporanTransaksiPenitip']);
     Route::get('/laporan/donasi-elektronik/download', [LaporanController::class, 'downloadLaporanDonasiBarangElektronik']);
+    Route::get('/laporanBarangHabis', [LaporanController::class, 'fetchDataLaporanBarangHabis']);
+    Route::get('/laporanBarangTerjual', [LaporanController::class, 'fetchDataLaporanPenjualanKategori']);
 });
 
 
@@ -241,8 +245,6 @@ Route::middleware(['auth:sanctum', KurirMiddleware::class])->group(function () {
     Route::get('/historyPengirimanKurir', [PegawaiController::class, 'getHistoryPengirimanKurir']);
     Route::post('/selesaikanPengirimanKurir/{id}', [PegawaiController::class, 'selesaikanPengiriman']);
 
-    Route::get('/laporanBarangHabis', [LaporanController::class, 'fetchDataLaporanBarangHabis']);
-    Route::get('/laporanBarangTerjual', [LaporanController::class, 'fetchDataLaporanPenjualanKategori']);
 });
 
 
