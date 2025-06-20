@@ -207,15 +207,12 @@ class PenitipController extends Controller
             $penitip = Auth::guard('penitip')->user();
 
             $idPenitip = $penitip->id_penitip;
-
-            $data = DB::table('pembelian')
-                ->join('keranjang', 'pembelian.id_keranjang', '=', 'keranjang.id_keranjang')
-                ->join('detail_keranjang', 'keranjang.id_keranjang', '=', 'detail_keranjang.id_keranjang')
-                ->join('barang', 'detail_keranjang.id_barang', '=', 'barang.id_barang')
-                ->join('komisi', 'barang.id_barang', '=', 'komisi.id_barang')
+            $data = DB::table('barang')
                 ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
                 ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
-                ->where('penitip.id_penitip', $idPenitip)
+                ->join('komisi', 'barang.id_barang', '=', 'komisi.id_barang')
+                ->join('pembelian', 'komisi.id_pembelian', '=', 'pembelian.id_pembelian')
+                ->where('komisi.id_penitip', $idPenitip)
                 ->select(
                     'barang.id_barang as id_barang',
                     'penitip.nama as nama_penitip',
@@ -224,9 +221,9 @@ class PenitipController extends Controller
                     'barang.harga as harga',
                     'barang.foto as foto_barang',
                     'barang.status_barang as status_barang'
-
                 )
                 ->get();
+            
 
             return response()->json([
                 'message' => 'Data retrieved successfully',
@@ -245,14 +242,12 @@ class PenitipController extends Controller
     {
         try {
             $penitip = Auth::guard('penitip')->user();
-            $data = DB::table('pembelian')
-                ->join('keranjang', 'pembelian.id_keranjang', '=', 'keranjang.id_keranjang')
-                ->join('detail_keranjang', 'keranjang.id_keranjang', '=', 'detail_keranjang.id_keranjang')
-                ->join('barang', 'detail_keranjang.id_barang', '=', 'barang.id_barang')
-                ->join('komisi', 'barang.id_barang', '=', 'komisi.id_barang')
+            $data = DB::table('barang')
                 ->join('penitipan', 'barang.id_penitipan', '=', 'penitipan.id_penitipan')
                 ->join('penitip', 'penitipan.id_penitip', '=', 'penitip.id_penitip')
-                ->where('penitip.id_penitip', $penitip->id_penitip)
+                ->join('komisi', 'barang.id_barang', '=', 'komisi.id_barang')
+                ->join('pembelian', 'komisi.id_pembelian', '=', 'pembelian.id_pembelian')
+                ->where('komisi.id_penitip', $penitip->id_penitip)
                 ->where('barang.id_barang', $id_barang)
                 ->select(
                     'barang.id_barang as id_barang',
