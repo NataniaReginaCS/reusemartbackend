@@ -35,11 +35,6 @@ class PembelianController extends Controller
             })
             ->get();
 
-        // $history = Pembelian::with(['keranjang.pembeli'])
-        //     ->whereHas('keranjang', function ($query) use ($pembeli) {
-        //         $query->where('id_pembeli', $pembeli->id_pembeli);
-        //     })
-        //     ->get();
 
         return response()->json(['data' => $history]);
     }
@@ -64,6 +59,9 @@ class PembelianController extends Controller
 
         if (!$pembelian) {
             return response()->json(['error' => 'Order not found or unauthorized'], 404);
+        }
+        if ($pembelian->bukti_pembayaran) {
+            $pembelian->bukti_pembayaran = 'storage/' . $pembelian->bukti_pembayaran;
         }
 
         $details = Detail_pembelian::where('id_pembelian', $pembelian->id_pembelian)

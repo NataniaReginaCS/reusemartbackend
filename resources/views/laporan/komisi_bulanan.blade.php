@@ -68,6 +68,15 @@
                         <td>{{ number_format($item['bonus_penitip'], 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
+                <tr>
+                    <td colspan="2" style="text-align: right;"><strong>Total </strong></td>
+                    <td>{{ number_format($totalHargaJual, 0, ',', '.') }}</td>
+                    <td></td>
+                    <td></td>
+                    <td>{{ number_format($totalKomisiHunter, 0, ',', '.') }}</td>
+                    <td>{{ number_format($totalKomisiReusemart, 0, ',', '.') }}</td>
+                    <td>{{ number_format($totalBonusPenitip, 0, ',', '.') }}</td>
+                </tr>
             </tbody>
         </table>
     </div>
