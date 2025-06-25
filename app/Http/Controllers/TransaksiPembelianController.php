@@ -82,10 +82,10 @@ class TransaksiPembelianController extends Controller
             $pembelian = Pembelian::create([
                 'id_pembeli' => $IdPembeli,
                 'id_pegawai' => null,
-                'id_alamat' => $request->id_alamat, // akan diset nanti
+                'id_alamat' => $request->id_alamat, 
                 'tanggal_laku' => Carbon::now(),
                 'status_pembayaran' => 'menunggu pembayaran',
-                'status_pengiriman' => $request->status_pengiriman, // ambil_sendiri / diantar
+                'status_pengiriman' => $request->status_pengiriman, 
                 'metode_pengiriman' => $request->metode_pengiriman,
 
                 'ongkir' => $ongkir,
@@ -101,7 +101,7 @@ class TransaksiPembelianController extends Controller
                 if (!$barang) {
                     return response()->json(['message' => 'Barang tidak ditemukan'], 404);
                 }
-                $barang->status_barang = 'terjual';
+                $barang->status_barang = 'sold out';
                 $barang->save();
                 
                 $detailPembelian = Detail_pembelian::create([
@@ -185,7 +185,6 @@ class TransaksiPembelianController extends Controller
             }
 
             $pembelian = $pembelian->map(function ($item) {
-                // Assuming bukti_pembayaran stores the filename or a path like "images/bukti_pembayaran/filename.png"
                 $item->bukti_pembayaran = $item->bukti_pembayaran
                     ? asset('storage/images/bukti_pembayaran/' . basename($item->bukti_pembayaran))
                     : null;
@@ -218,6 +217,11 @@ class TransaksiPembelianController extends Controller
                 if ($itemBarang) {
                     $this->sendNotification($itemBarang, 'Pembayaran Diterima', "Pembayaran untuk barang {$itemBarang->nama} yang anda titipkan telah diterima. Terima kasih telah menggunakan layanan kami.");
                 }
+            }
+            $pembeli = Pembeli::where('pembeli.id_pembeli', $pembelian->id_pembeli)->first();
+            if (!$pembeli) {
+                $pembeli->poin += $pembelian->poin_didapat;
+                $pembeli->save();
             }
 
             $pembelian->status_pembayaran = 'lunas';

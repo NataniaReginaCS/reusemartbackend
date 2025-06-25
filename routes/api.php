@@ -114,6 +114,12 @@ Route::middleware(['auth:sanctum', PembeliMiddleware::class])->group(function ()
     Route::get('/fetchMerchandise', [MerchandiseController::class, 'fetchMerchandise']);
     Route::post('/claimMerchandise/{id}', [MerchandiseController::class, 'claimMerchandise']);
     Route::get('/fetchMerchandiseById/{id}', [MerchandiseController::class, 'fetchMerchandiseById']);
+
+
+    //Responsi
+    Route::get('/getTransaksiDisiapkan', [TransaksiPembelianController::class, 'getTransaksiDisiapkan']);
+    Route::get('/getCurrentTransaksi/{id_pembelian}', [TransaksiPembelianController::class, 'getCurrentTransaksi']);
+    Route::post('/cancelTransaksi/{id_pembelian}', [TransaksiPembelianController::class, 'cancelTransaksi']);
 });
 
 Route::middleware(['auth:sanctum', PenitipMiddleware::class])->group(function () {

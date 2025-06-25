@@ -66,7 +66,7 @@ class PegawaiController extends Controller
                 $this->sendNotificationToPembeli($pembeli, 'Pengiriman Selesai', "Kurir sudah sampai. Terima kasih telah menggunakan layanan kami.");
             }
             
-            
+            $this->selesaiTransaksi($id_pembelian);
             return response()->json([
                 'message' => 'Pengiriman selesai',
                 'pembelian' => $pembelian,
