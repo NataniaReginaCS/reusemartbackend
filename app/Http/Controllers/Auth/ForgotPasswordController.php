@@ -48,7 +48,7 @@ class ForgotPasswordController extends Controller
                 ['token' => $token, 'created_at' => now()]
             );
     
-            $resetLink = "http://localhost:5173/reset-password?email={$request->email}&token=$token&user_type=$userType";
+            $resetLink = "https://reusemartkl.barioth.web.id/reset-password?email={$request->email}&token=$token&user_type=$userType";
     
             Mail::to($request->email)->send(new ResetPasswordLinkMail($resetLink));
     

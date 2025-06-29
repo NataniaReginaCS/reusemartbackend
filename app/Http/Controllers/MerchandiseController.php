@@ -48,26 +48,15 @@ class MerchandiseController extends Controller
         }
     }
 
-    public function claimMerchandise($id_penukaranpoin)
+    public function claimMerchandise($id_merchandise)
     {
-        try {
-            $penukaran = DB::table('penukaran_poin')
-                ->where('id_penukaranpoin', $id_penukaranpoin)
-                ->first();
-
-            if (!$penukaran) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data penukaran tidak ditemukan.'
-                ], 404);
-            }
-
+    
+        try{
             $merchandise = DB::table('merchandise')
-                ->where('id_merchandise', $penukaran->id_merchandise)
+                ->where('id_merchandise', $id_merchandise)
                 ->first();
 
             $pembeli = Auth::guard('pembeli')->user();
-
 
             if (!$merchandise || !$pembeli) {
                 return response()->json([
@@ -98,7 +87,6 @@ class MerchandiseController extends Controller
                 ]);
             $day = now()->addDays(1);
             DB::table('penukaran_poin')
-
                 ->insert([
                     'id_pembeli' => $pembeli->id_pembeli,
                     'id_merchandise' => $merchandise->id_merchandise,
